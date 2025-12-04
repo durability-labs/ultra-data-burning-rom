@@ -1,0 +1,10 @@
+services:
+  # This is actually the frontend + backend
+  backend:
+    build:
+      context: .
+      dockerfile: ./ReactApp1.Server/Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
