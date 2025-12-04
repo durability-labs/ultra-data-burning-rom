@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import UploadButton from './UploadButton';
-import EditableFieldsTable from './EditableFieldsTable';
 import BurnButton from './BurnButton';
 
 export default function Upload() {
@@ -76,7 +75,6 @@ export default function Upload() {
       <div style={{ maxWidth: '600px', margin: '1.5rem auto 1.5rem auto', textAlign: 'center' }}>
         <UploadButton />
       </div>
-      <EditableFieldsTable />
       <div style={{ maxWidth: '600px', margin: '1.5rem auto 1.5rem auto', textAlign: 'center' }}>
         <BurnButton />
       </div>

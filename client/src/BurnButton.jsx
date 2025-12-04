@@ -1,6 +1,9 @@
 import React from 'react';
+import BurnDialog from './BurnDialog';
 
 export default function BurnButton() {
+  const [open, setOpen] = React.useState(false);
+
   return (
     <>
       <button
@@ -17,6 +20,7 @@ export default function BurnButton() {
           alignItems: 'center',
           gap: '0.5rem'
         }}
+        onClick={() => setOpen(true)}
       >
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: 'middle' }}>
           <circle cx="12" cy="12" r="10" />
@@ -25,6 +29,7 @@ export default function BurnButton() {
         </svg>
         Burn
       </button>
+      <BurnDialog open={open} onClose={() => setOpen(false)} />
     </>
   );
 }
