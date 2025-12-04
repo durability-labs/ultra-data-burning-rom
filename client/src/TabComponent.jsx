@@ -1,4 +1,7 @@
 import React from 'react';
+import Upload from './Upload';
+import Catalogue from './Catalogue';
+import Download from './Download';
 
 export default function TabComponent() {
   const [activeTab, setActiveTab] = React.useState(0);
@@ -33,10 +36,10 @@ export default function TabComponent() {
           </button>
         ))}
       </div>
-      <div style={{flex: 1, padding: '2rem', background: '#fff', overflow: 'auto'}}>
-        {activeTab === 0 && <div>Upload content goes here.</div>}
-        {activeTab === 1 && <div>Catalogue content goes here.</div>}
-        {activeTab === 2 && <div>Download content goes here.</div>}
+      <div style={{flex: 1, padding: '2rem', background: '#424242ff', overflow: 'auto'}}>
+        {activeTab === 0 && <Upload />}
+        {activeTab === 1 && <Catalogue />}
+        {activeTab === 2 && <Download />}
       </div>
     </div>
   );
