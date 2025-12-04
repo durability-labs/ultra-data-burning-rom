@@ -1,5 +1,6 @@
 import React from 'react';
 import { useAppContext } from './AppContext';
+import TabComponent from './TabComponent';
 
 export default function Home() {
   const { username, clearUsername } = useAppContext();
@@ -38,9 +39,13 @@ export default function Home() {
           Logout
         </button>
       </div>
-      <div style={{ marginTop: '48px' }}>
-        <h1>Welcome, {username}!</h1>
-        <p>This is your home page.</p>
+      <div style={{
+        height: 'calc(100vh - 48px)',
+        marginTop: '24px',
+        width: 'calc(100vw)',
+        display: 'flex'
+      }}>
+        <TabComponent />
       </div>
     </>
   );
