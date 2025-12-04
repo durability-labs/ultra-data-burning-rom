@@ -1,0 +1,6 @@
+@UltraDataBurningROM.Server_HostAddress = http://localhost:5143
+
+GET {{UltraDataBurningROM.Server_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

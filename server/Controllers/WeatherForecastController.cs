@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 
-namespace ReactApp1.Server.Controllers
+namespace UltraDataBurningROM.Server.Controllers
 {
     [ApiController]
     [Route("[controller]")]

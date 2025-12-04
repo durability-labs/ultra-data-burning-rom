@@ -1,4 +1,4 @@
-namespace ReactApp1.Server
+namespace UltraDataBurningROM.Server
 {
     public class WeatherForecast
     {

@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="client/UltraDataBurningROM.client.esproj" DisplayName="ultradataburningrom.client">
+    <Build />
+    <Deploy />
+  </Project>
+  <Project Path="server/UltraDataBurningROM.Server.csproj" />
+</Solution>

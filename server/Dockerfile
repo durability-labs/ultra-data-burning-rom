@@ -19,20 +19,20 @@ RUN apt-get -y install nodejs
 FROM with-node AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["ReactApp1.Server/ReactApp1.Server.csproj", "ReactApp1.Server/"]
-COPY ["reactapp1.client/reactapp1.client.esproj", "reactapp1.client/"]
-RUN dotnet restore "./ReactApp1.Server/ReactApp1.Server.csproj"
+COPY ["server/UltraDataBurningROM.Server.csproj", "server/"]
+COPY ["client/ultradataburningrom.client.esproj", "client/"]
+RUN dotnet restore "./server/UltraDataBurningROM.Server.csproj"
 COPY . .
-WORKDIR "/src/ReactApp1.Server"
-RUN dotnet build "./ReactApp1.Server.csproj" -c $BUILD_CONFIGURATION -o /app/build
+WORKDIR "/src/server"
+RUN dotnet build "./UltraDataBurningROM.Server.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 # This stage is used to publish the service project to be copied to the final stage
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./ReactApp1.Server.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "./UltraDataBurningROM.Server.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 # This stage is used in production or when running from VS in regular mode (Default when not using the Debug configuration)
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "ReactApp1.Server.dll"]
+ENTRYPOINT ["dotnet", "UltraDataBurningROM.Server.dll"]

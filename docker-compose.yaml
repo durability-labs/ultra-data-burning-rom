@@ -1,9 +1,8 @@
 services:
-  # This is actually the frontend + backend
-  backend:
+  ultradataburningrom:
     build:
       context: .
-      dockerfile: ./ReactApp1.Server/Dockerfile
+      dockerfile: ./server/Dockerfile
     ports:
       - "8080:8080"
     environment:
