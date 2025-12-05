@@ -1,18 +1,44 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import UploadButton from './UploadButton';
+import { useAppContext } from './AppContext';
 import BurnButton from './BurnButton';
 
 export default function Upload() {
-  const [files] = useState([
-    { filename: 'report.pdf', size: '10.2 MB' },
-    { filename: 'photo.jpg', size: '850 KB' },
-    { filename: 'data.csv', size: '31.3 MB' }
-  ]);
+  const { username } = useAppContext();
+  const [files, setFiles] = useState([]);
+  const [storage, setStorage] = useState({ bytesUsed: 0, totalBytes: 734003200 });
 
-  const [storage, setStorage] = useState({
-    bytesUsed: 80359296,
-    totalBytes: 734003200
-  });
+  useEffect(() => {
+    if (!username) return;
+    fetch(`/bucket/${username}`)
+      .then(res => res.json())
+      .then(data => {
+        var used = 0
+        var files = []
+        for (const entry of data.entries) {
+          used += entry.byteSize;
+          files.push({
+            id: entry.id,
+            filename: entry.filename,
+            size: formatBytes(entry.byteSize)
+          })
+        }
+        setFiles(files);
+        setStorage({ bytesUsed: used, totalBytes: data.volumeSize });
+      })
+      .catch(() => {
+        setFiles([]);
+        setStorage({ bytesUsed: 0, totalBytes: 1 });
+      });
+  }, [username]);
+
+  function formatBytes(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  }
 
   return (
     <>
@@ -81,4 +107,3 @@ export default function Upload() {
     </>
   );
 }
-
