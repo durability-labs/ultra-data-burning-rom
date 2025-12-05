@@ -1,12 +1,25 @@
 import React from 'react';
+import { useAppContext } from './AppContext';
 
 export default function UploadButton() {
+  const { username } = useAppContext();
   const handleFileChange = (event) => {
     const file = event.target.files[0];
-    if (file) {
-      // Placeholder: upload file to backend
-      console.log('Selected file:', file);
-      window.alert('File selected: ' + file.name);
+    if (file && username) {
+      const formData = new FormData();
+      formData.append('file', file);
+      fetch(`/bucket/${username}`, {
+        method: 'POST',
+        body: formData
+      })
+        .then(res => {
+          if (res.ok) {
+            window.alert('File uploaded: ' + file.name);
+          } else {
+            window.alert('Upload failed.');
+          }
+        })
+        .catch(() => window.alert('Upload failed.'));
     }
   };
 
