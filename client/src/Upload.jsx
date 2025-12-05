@@ -8,8 +8,7 @@ export default function Upload() {
   const [files, setFiles] = useState([]);
   const [storage, setStorage] = useState({ bytesUsed: 0, totalBytes: 734003200 });
 
-  useEffect(() => {
-    if (!username) return;
+  function updateBucket(username) {
     fetch(`/bucket/${username}`)
       .then(res => res.json())
       .then(data => {
@@ -30,6 +29,11 @@ export default function Upload() {
         setFiles([]);
         setStorage({ bytesUsed: 0, totalBytes: 1 });
       });
+  }
+
+  useEffect(() => {
+    if (!username) return;
+    updateBucket(username);    
   }, [username]);
 
   function formatBytes(bytes) {
@@ -38,6 +42,19 @@ export default function Upload() {
     const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  }
+
+  function handleDelete(file) {
+    if (!username) return;
+    const confirmed = window.confirm(`Delete file "${file.filename}"?`);
+    if (!confirmed) return;
+    // Assume file has an id property, fallback to filename if not
+    const fileId = file.id || file.filename;
+    fetch(`/bucket/${username}/${fileId}`, { method: 'DELETE' })
+      .then(res => {
+        updateBucket(username);
+      })
+      .catch(() => window.alert('Failed to delete file.'));
   }
 
   return (
@@ -59,7 +76,7 @@ export default function Upload() {
                     <span>{file.size}</span>
                     <button
                       title="Delete file"
-                      onClick={() => window.alert('Delete!')}
+                      onClick={() => handleDelete(file)}
                       style={{
                         background: 'none',
                         border: 'none',
@@ -75,6 +92,7 @@ export default function Upload() {
                 </td>
               </tr>
             ))}
+            
           </tbody>
         </table>
         <div style={{ marginTop: '1.5rem' }}>
