@@ -82,6 +82,9 @@ export default function UploadOpen(username, bucket, bytesUsed) {
               transition: 'width 0.3s'
             }} />
           </div>
+          <div style={{ marginBottom: '0.5rem', color: '#fff', fontSize: '0.75rem' }}>
+            Burn ROM before: {new Date(bucket.expiryUtc).toLocaleString()}
+          </div>
         </div>
       </div>
       <div style={{ maxWidth: '600px', margin: '1.5rem auto 1.5rem auto', textAlign: 'center' }}>

@@ -51,9 +51,10 @@ namespace UltraDataBurningROM.Server.Controllers
                     ByteSize = 1024 * 1024 * 9
                 }
             ],
-            ExpiryUtc = 0,
+            ExpiryUtc = new DateTimeOffset(DateTime.UtcNow.AddHours(3)).ToUnixTimeMilliseconds(),
             State = 0,
-            VolumeSize = 1024 * 1024 * 650
+            VolumeSize = 1024 * 1024 * 650,
+            RomCid = string.Empty,
         };
 
         [HttpGet("{username}")]
@@ -103,11 +104,23 @@ namespace UltraDataBurningROM.Server.Controllers
                 while (bucket.State < 5)
                 {
                     bucket.State++;
-                    Thread.Sleep(TimeSpan.FromSeconds(5));
+                    Thread.Sleep(TimeSpan.FromSeconds(1));
                 }
-                bucket.State = 0;
+                bucket.State = 5;
+                bucket.RomCid = "romCIDhere";
             });
             Console.WriteLine("Burn!");
+            return Ok();
+        }
+
+        [HttpPost("{username}/clear")]
+        public async Task<IActionResult> Clear(string username)
+        {
+            if (bucket.State == 5)
+            {
+                bucket.RomCid = string.Empty;
+                bucket.State = 0;
+            }
             return Ok();
         }
 
@@ -206,7 +219,8 @@ namespace UltraDataBurningROM.Server.Controllers
         public BucketEntry[] Entries { get; set; } = Array.Empty<BucketEntry>();
         public ulong VolumeSize { get; set; } = 0;
         public int State { get; set; } = 0;
-        public int ExpiryUtc { get; set; } = 0;
+        public long ExpiryUtc { get; set; } = 0;
+        public string RomCid { get; set; } = string.Empty;
     }
 
     public class BucketEntry

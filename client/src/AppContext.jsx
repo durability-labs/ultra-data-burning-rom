@@ -17,6 +17,34 @@ export function AppProvider({ children }) {
     }
   }, [username]);
 
+  // New global state: active tab index and rom CID (initialize from localStorage)
+  const [activeTab, setActiveTab] = useState(() => {
+    const v = localStorage.getItem('activeTab');
+    return v !== null ? parseInt(v, 10) || 0 : 0;
+  });
+  const [romCid, setRomCid] = useState(() => {
+    return localStorage.getItem('romCid') || '';
+  });
+
+  // Persist activeTab to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem('activeTab', String(activeTab));
+    } catch (e) {
+      // ignore
+    }
+  }, [activeTab]);
+
+  // Persist romCid to localStorage (remove if empty)
+  useEffect(() => {
+    try {
+      if (romCid) localStorage.setItem('romCid', romCid);
+      else localStorage.removeItem('romCid');
+    } catch (e) {
+      // ignore
+    }
+  }, [romCid]);
+
   // Wrap setUsername to update state
   const setUsername = (name) => {
     setUsernameState(name);
@@ -27,7 +55,7 @@ export function AppProvider({ children }) {
   }
 
   return (
-    <AppContext.Provider value={{ username, setUsername, clearUsername }}>
+    <AppContext.Provider value={{ username, setUsername, clearUsername, activeTab, setActiveTab, romCid, setRomCid }}>
       {children}
     </AppContext.Provider>
   );

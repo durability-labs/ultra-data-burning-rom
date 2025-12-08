@@ -9,11 +9,12 @@ const defaultBucket = {
     entries: [],
     volumeSize: 1,
     state: 0,
-    expiryUtc: 0
+    expiryUtc: 0,
+    romCid: ""
   };
 
 export default function Upload() {
-  const { username } = useAppContext();
+  const { username, setActiveTab, setRomCid } = useAppContext();
   const [bucket, setBucket] = useState(defaultBucket);
 
   const updateBucket = useCallback((user) => {
@@ -41,6 +42,6 @@ export default function Upload() {
     return () => clearInterval(id);
   }, [username, updateBucket]);
 
-  if (bucket.state > 0) return UploadBusy(username, bucket);
+  if (bucket.state > 0) return UploadBusy(username, setActiveTab, setRomCid, bucket);
   return UploadOpen(username, bucket, bytesUsed);
 }

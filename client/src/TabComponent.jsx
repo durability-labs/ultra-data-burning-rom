@@ -2,9 +2,10 @@ import React from 'react';
 import Upload from './Upload';
 import Catalogue from './Catalogue';
 import Download from './Download';
+import { useAppContext } from './AppContext';
 
 export default function TabComponent() {
-  const [activeTab, setActiveTab] = React.useState(0);
+  const { activeTab, setActiveTab } = useAppContext();
   const tabs = ["Upload", "Catalogue", "Download"];
   return (
     <div style={{display: 'flex', flexDirection: 'column', height: '100%', width: '100%'}}>
