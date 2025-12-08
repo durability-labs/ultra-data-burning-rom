@@ -97,8 +97,13 @@ namespace UltraDataBurningROM.Server.Controllers
         }
 
         [HttpPost("{username}/burnrom")]
-        public async Task<IActionResult> BurnRom(string username)
+        public async Task<IActionResult> BurnRom(string username, [FromBody] RomInfo romInfo)
         {
+            Console.WriteLine("rominfo: " + romInfo.Title);
+            Console.WriteLine("rominfo: " + romInfo.Author);
+            Console.WriteLine("rominfo: " + romInfo.Tags);
+            Console.WriteLine("rominfo: " + romInfo.Description);
+
             var _ = Task.Run(() =>
             {
                 while (bucket.State < 5)

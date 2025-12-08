@@ -1,14 +1,23 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAppContext } from './AppContext';
 import EditableFieldsTable from './EditableFieldsTable';
 import DurabilityOptions from './DurabilityOptions';
 
 export default function BurnDialog({ open, onClose }) {
   const { username } = useAppContext();
+    const [fields, setFields] = useState({
+    title: '',
+    author: '',
+    tags: '',
+    description: ''
+  });
+
   async function handleBurn() {
     try {
-      const res = await fetch(`/bucket/${username}/burnrom`, {
-        method: 'POST'
+      const res = await fetch(`/bucket/${encodeURIComponent(username)}/burnrom`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(fields)
       });
       if (!res.ok) {
         console.error('Burn request failed:', res.status, res.statusText);
@@ -42,7 +51,7 @@ export default function BurnDialog({ open, onClose }) {
         textAlign: 'center'
       }}>
         <h2 style={{marginTop: 0}}>Finalize Burn</h2>
-        <EditableFieldsTable />
+        {EditableFieldsTable(fields, setFields)}
         <DurabilityOptions />
         <button
           style={{

@@ -1,13 +1,6 @@
 import React, { useState } from 'react';
 
-export default function EditableFieldsTable() {
-  const [fields, setFields] = useState({
-    title: '',
-    author: '',
-    tags: '',
-    description: ''
-  });
-
+export default function EditableFieldsTable(fields, setFields) {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFields(prev => ({ ...prev, [name]: value }));
