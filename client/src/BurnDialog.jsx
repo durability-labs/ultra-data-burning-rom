@@ -1,8 +1,24 @@
 import React from 'react';
+import { useAppContext } from './AppContext';
 import EditableFieldsTable from './EditableFieldsTable';
 import DurabilityOptions from './DurabilityOptions';
 
 export default function BurnDialog({ open, onClose }) {
+  const { username } = useAppContext();
+  async function handleBurn() {
+    try {
+      const res = await fetch(`/bucket/${username}/burnrom`, {
+        method: 'POST'
+      });
+      if (!res.ok) {
+        console.error('Burn request failed:', res.status, res.statusText);
+      }
+    } catch (err) {
+      console.error('Error sending burn request:', err);
+    } finally {
+      onClose();
+    }
+  }
   if (!open) return null;
   return (
     <div style={{
@@ -40,7 +56,7 @@ export default function BurnDialog({ open, onClose }) {
             cursor: 'pointer',
             boxShadow: '0 1px 4px rgba(0,0,0,0.08)'
           }}
-          onClick={onClose}
+          onClick={handleBurn}
         >
           Burn!
         </button>

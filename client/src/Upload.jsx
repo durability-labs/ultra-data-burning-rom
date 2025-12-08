@@ -1,35 +1,33 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import UploadButton from './UploadButton';
 import { useAppContext } from './AppContext';
 import BurnButton from './BurnButton';
 
+const defaultBucket = {
+    entries: [],
+    volumeSize: 1,
+    state: 0,
+    expiryUtc: 0
+  };
+
 export default function Upload() {
   const { username } = useAppContext();
-  const [files, setFiles] = useState([]);
-  const [storage, setStorage] = useState({ bytesUsed: 0, totalBytes: 734003200 });
+  const [bucket, setBucket] = useState(defaultBucket);
 
   function updateBucket(username) {
     fetch(`/bucket/${username}`)
       .then(res => res.json())
       .then(data => {
-        var used = 0
-        var files = []
-        for (const entry of data.entries) {
-          used += entry.byteSize;
-          files.push({
-            id: entry.id,
-            filename: entry.filename,
-            size: formatBytes(entry.byteSize)
-          })
-        }
-        setFiles(files);
-        setStorage({ bytesUsed: used, totalBytes: data.volumeSize });
+        setBucket(data);
       })
       .catch(() => {
-        setFiles([]);
-        setStorage({ bytesUsed: 0, totalBytes: 1 });
+        setBucket(defaultBucket);
       });
   }
+
+  const bytesUsed = useMemo(() => {
+    return bucket.entries.reduce((total, file) => total + file.byteSize, 0);
+  }, [bucket]);
 
   useEffect(() => {
     if (!username) return;
@@ -68,12 +66,12 @@ export default function Upload() {
             </tr>
           </thead>
           <tbody>
-            {files.map((file, idx) => (
+            {bucket.entries.map((file, idx) => (
               <tr key={idx}>
                 <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}>{file.filename}</td>
                 <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <span>{file.size}</span>
+                    <span>{formatBytes(file.byteSize)}</span>
                     <button
                       title="Delete file"
                       onClick={() => handleDelete(file)}
@@ -97,7 +95,7 @@ export default function Upload() {
         </table>
         <div style={{ marginTop: '1.5rem' }}>
           <div style={{ marginBottom: '0.5rem', color: '#fff', fontSize: '0.95rem' }}>
-            Storage used: {((storage.bytesUsed / 1048576).toFixed(2))} MB / {((storage.totalBytes / 1048576).toFixed(2))} MB
+            Storage used: {((bytesUsed / 1048576).toFixed(2))} MB / {((bucket.volumeSize / 1048576).toFixed(2))} MB
           </div>
           <div style={{
             width: '100%',
@@ -108,7 +106,7 @@ export default function Upload() {
             boxShadow: '0 1px 4px rgba(0,0,0,0.08)'
           }}>
             <div style={{
-              width: `${Math.min(100, (storage.bytesUsed / storage.totalBytes) * 100)}%`,
+              width: `${Math.min(100, (bytesUsed / bucket.volumeSize) * 100)}%`,
               height: '100%',
               background: '#1976d2',
               transition: 'width 0.3s'

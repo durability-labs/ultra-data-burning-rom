@@ -86,6 +86,13 @@ namespace UltraDataBurningROM.Server.Controllers
             return Ok("Saved file at " + filePath);
         }
 
+        [HttpPost("{username}/burnrom")]
+        public async Task<IActionResult> BurnRom(string username)
+        {
+            Console.WriteLine("Burn!");
+            return Ok();
+        }
+
         private const string UploadFilePath = "uploadedfile.bin";
         private const int BufferSize = 1024 * 1024;
 
@@ -180,6 +187,8 @@ namespace UltraDataBurningROM.Server.Controllers
     {
         public BucketEntry[] Entries { get; set; } = Array.Empty<BucketEntry>();
         public ulong VolumeSize { get; set; } = 0;
+        public int State { get; set; } = 0;
+        public int ExpiryUtc { get; set; } = 0;
     }
 
     public class BucketEntry
