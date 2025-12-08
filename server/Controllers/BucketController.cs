@@ -10,60 +10,69 @@ namespace UltraDataBurningROM.Server.Controllers
     [Route("bucket")]
     public class BucketController : ControllerBase
     {
-        private static readonly List<BucketEntry> entries = new List<BucketEntry>()
+        private static readonly Bucket bucket = new Bucket
         {
-            new BucketEntry
-            {
-                Id = 101,
-                Filename = "filename_1.bin",
-                ByteSize = 1024 * 1024 * 4
-            },
-            new BucketEntry
-            {
-                Id = 102,
-                Filename = "filename_2.bin",
-                ByteSize = 1024 * 1024 * 5
-            },
-            new BucketEntry
-            {
-                Id = 103,
-                Filename = "filename_3.bin",
-                ByteSize = 1024 * 1024 * 6
-            },
-            new BucketEntry
-            {
-                Id = 104,
-                Filename = "filename_4.bin",
-                ByteSize = 1024 * 1024 * 7
-            },
-            new BucketEntry
-            {
-                Id = 105,
-                Filename = "filename_5.bin",
-                ByteSize = 1024 * 1024 * 8
-            },
-            new BucketEntry
-            {
-                Id = 106,
-                Filename = "filename_6.bin",
-                ByteSize = 1024 * 1024 * 9
-            }
+            Entries =
+            [
+                new BucketEntry
+                {
+                    Id = 101,
+                    Filename = "filename_1.bin",
+                    ByteSize = 1024 * 1024 * 4
+                },
+                new BucketEntry
+                {
+                    Id = 102,
+                    Filename = "filename_2.bin",
+                    ByteSize = 1024 * 1024 * 5
+                },
+                new BucketEntry
+                {
+                    Id = 103,
+                    Filename = "filename_3.bin",
+                    ByteSize = 1024 * 1024 * 6
+                },
+                new BucketEntry
+                {
+                    Id = 104,
+                    Filename = "filename_4.bin",
+                    ByteSize = 1024 * 1024 * 7
+                },
+                new BucketEntry
+                {
+                    Id = 105,
+                    Filename = "filename_5.bin",
+                    ByteSize = 1024 * 1024 * 8
+                },
+                new BucketEntry
+                {
+                    Id = 106,
+                    Filename = "filename_6.bin",
+                    ByteSize = 1024 * 1024 * 9
+                }
+            ],
+            ExpiryUtc = 0,
+            State = 0,
+            VolumeSize = 1024 * 1024 * 650
         };
 
         [HttpGet("{username}")]
         public Bucket Get(string username)
         {
-            return new Bucket
-            {
-                VolumeSize = 1024 * 1024 * 650,
-                Entries = entries.ToArray()
-            };
+            return bucket;
         }
 
         [HttpDelete("{username}/{entryId}")]
         public void Delete(string username, ulong entryId)
         {
-            entries.RemoveAll(e => e.Id == entryId);
+            try
+            {
+                bucket.Entries = bucket.Entries.Where(e => e.Id != entryId).ToArray();
+            }
+            catch (Exception ex) 
+            {
+                Console.WriteLine(ex.ToString());
+            }
         }
 
         [HttpPost("{username}")]
@@ -89,6 +98,15 @@ namespace UltraDataBurningROM.Server.Controllers
         [HttpPost("{username}/burnrom")]
         public async Task<IActionResult> BurnRom(string username)
         {
+            var _ = Task.Run(() =>
+            {
+                while (bucket.State < 5)
+                {
+                    bucket.State++;
+                    Thread.Sleep(TimeSpan.FromSeconds(5));
+                }
+                bucket.State = 0;
+            });
             Console.WriteLine("Burn!");
             return Ok();
         }
