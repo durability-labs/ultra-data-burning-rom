@@ -2,16 +2,9 @@ import React, { useState, useMemo, useEffect } from 'react';
 import UploadButton from './UploadButton';
 import { useAppContext } from './AppContext';
 import BurnButton from './BurnButton';
+import formatBytes from './format';
 
 export default function UploadOpen(username, bucket, bytesUsed) {
-  function formatBytes(bytes) {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  }
-
   function handleDelete(file) {
     if (!username) return;
     const confirmed = window.confirm(`Delete file "${file.filename}"?`);
