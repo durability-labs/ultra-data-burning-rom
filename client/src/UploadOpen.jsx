@@ -9,9 +9,8 @@ export default function UploadOpen(username, bucket, bytesUsed) {
     if (!username) return;
     const confirmed = window.confirm(`Delete file "${file.filename}"?`);
     if (!confirmed) return;
-    // Assume file has an id property, fallback to filename if not
-    const fileId = file.id || file.filename;
-    fetch(`/bucket/${username}/${fileId}`, { method: 'DELETE' })
+    const filename = file.filename;
+    fetch(`/bucket/${username}/${filename}`, { method: 'DELETE' })
       .then(res => {
         updateBucket(username);
       })

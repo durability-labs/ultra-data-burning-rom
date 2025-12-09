@@ -13,7 +13,7 @@ namespace UltraDataBurningROM.Server.Controllers
                 {
                     RomCid = "pop1",
                     Entries = [
-                        new BucketEntry
+                        new FileEntry
                         {
                             Filename = "pop1file.txt",
                             ByteSize = 123456,
@@ -47,7 +47,7 @@ namespace UltraDataBurningROM.Server.Controllers
                 {
                     RomCid = "serach1",
                     Entries = [
-                        new BucketEntry
+                        new FileEntry
                         {
                             Filename = "serach1file.txt",
                             ByteSize = 123456,
@@ -69,7 +69,7 @@ namespace UltraDataBurningROM.Server.Controllers
                 {
                     RomCid = "serach2",
                     Entries = [
-                        new BucketEntry
+                        new FileEntry
                         {
                             Filename = "serach2file.txt",
                             ByteSize = 123456,

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Net.Http.Headers;
+using UltraDataBurningROM.Server.Services;
 
 namespace UltraDataBurningROM.Server.Controllers
 {
@@ -10,65 +11,23 @@ namespace UltraDataBurningROM.Server.Controllers
     [Route("bucket")]
     public class BucketController : ControllerBase
     {
-        private static readonly Bucket bucket = new Bucket
+        public BucketController(IBucketService bucketService)
         {
-            Entries =
-            [
-                new BucketEntry
-                {
-                    Id = 101,
-                    Filename = "filename_1.bin",
-                    ByteSize = 1024 * 1024 * 4
-                },
-                new BucketEntry
-                {
-                    Id = 102,
-                    Filename = "filename_2.bin",
-                    ByteSize = 1024 * 1024 * 5
-                },
-                new BucketEntry
-                {
-                    Id = 103,
-                    Filename = "filename_3.bin",
-                    ByteSize = 1024 * 1024 * 6
-                },
-                new BucketEntry
-                {
-                    Id = 104,
-                    Filename = "filename_4.bin",
-                    ByteSize = 1024 * 1024 * 7
-                },
-                new BucketEntry
-                {
-                    Id = 105,
-                    Filename = "filename_5.bin",
-                    ByteSize = 1024 * 1024 * 8
-                },
-                new BucketEntry
-                {
-                    Id = 106,
-                    Filename = "filename_6.bin",
-                    ByteSize = 1024 * 1024 * 9
-                }
-            ],
-            ExpiryUtc = new DateTimeOffset(DateTime.UtcNow.AddHours(3)).ToUnixTimeMilliseconds(),
-            State = 0,
-            VolumeSize = 1024 * 1024 * 650,
-            RomCid = string.Empty,
-        };
+            this.bucketService = bucketService;
+        }
 
         [HttpGet("{username}")]
         public Bucket Get(string username)
         {
-            return bucket;
+            return bucketService.GetBucket(username);
         }
 
-        [HttpDelete("{username}/{entryId}")]
-        public void Delete(string username, ulong entryId)
+        [HttpDelete("{username}/{filename}")]
+        public void Delete(string username, string filename)
         {
             try
             {
-                bucket.Entries = bucket.Entries.Where(e => e.Id != entryId).ToArray();
+                bucketService.DeleteFile(username, filename);
             }
             catch (Exception ex) 
             {
@@ -133,6 +92,7 @@ namespace UltraDataBurningROM.Server.Controllers
 
         private const string UploadFilePath = "uploadedfile.bin";
         private const int BufferSize = 1024 * 1024;
+        private readonly IBucketService bucketService;
 
         public async Task<string> SaveViaMultipartReaderAsync(string boundary, Stream contentStream, CancellationToken cancellationToken)
         {
@@ -219,21 +179,5 @@ namespace UltraDataBurningROM.Server.Controllers
         public void OnResourceExecuted(ResourceExecutedContext context)
         {
         }
-    }
-
-    public class Bucket
-    {
-        public BucketEntry[] Entries { get; set; } = Array.Empty<BucketEntry>();
-        public ulong VolumeSize { get; set; } = 0;
-        public int State { get; set; } = 0;
-        public long ExpiryUtc { get; set; } = 0;
-        public string RomCid { get; set; } = string.Empty;
-    }
-
-    public class BucketEntry
-    {
-        public ulong Id { get; set; } = 0;
-        public string Filename { get; set; } = string.Empty;
-        public ulong ByteSize { get; set; } = 0;
     }
 }

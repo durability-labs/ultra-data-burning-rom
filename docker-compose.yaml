@@ -11,6 +11,7 @@ services:
           http://archivist-1:8081;
           http://archivist-2:8082
       - BROM_USERNAMES=thatben
+      - BROM_ROMVOLUMESIZE=734003200
     volumes:
       - ./volumes/brom/database:/database
       - ./volumes/brom/mounts:/mounts

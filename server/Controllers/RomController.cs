@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using UltraDataBurningROM.Server.Services;
 
 namespace UltraDataBurningROM.Server.Controllers
 {
@@ -19,7 +20,7 @@ namespace UltraDataBurningROM.Server.Controllers
             },
             Entries =
             [
-                new BucketEntry()
+                new FileEntry()
                 {
                     Id = 101,
                     ByteSize = 1234567,
@@ -90,7 +91,7 @@ namespace UltraDataBurningROM.Server.Controllers
         public string RomCid { get; set; } = string.Empty;
         public int MountState { get; set; } = 0;
         public RomInfo Info { get; set; } = new RomInfo();
-        public BucketEntry[] Entries { get; set; } = Array.Empty<BucketEntry>();
+        public FileEntry[] Entries { get; set; } = Array.Empty<FileEntry>();
         public long MountExpiryUtc { get; set; } = 0;
         public long StorageExpiryUtc { get; set; } = 0;
     }
@@ -100,14 +101,5 @@ namespace UltraDataBurningROM.Server.Controllers
     {
         public RomInfo Fields { get; set; } = new RomInfo();
         public ulong DurabilityOptionId { get; set; }
-    }
-
-    [Serializable]
-    public class RomInfo
-    {
-        public string Title { get; set; } = string.Empty;
-        public string Author { get; set; } = string.Empty;
-        public string Tags { get; set; } = string.Empty;
-        public string Description { get; set; } = string.Empty;
     }
 }
