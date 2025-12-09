@@ -1,39 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 
-const defaultDurabilityInfo = {
-    options: [
-      {
-        id: 0,
-        name: '',
-        priceLine: '',
-        description: '',
-        sponsorLine: ''
-      }
-    ]
-  };
-
-export default function DurabilityOptions() {
-  const [durabilityInfo, setDurabilityInfo] = useState(defaultDurabilityInfo);
-  const [selectedId, setSelectedId] = useState(durabilityInfo.options[0]?.id ?? null);
-
-  useEffect(() => {
-    fetch('/durability')
-      .then(res => res.json())
-      .then(data => {
-        setDurabilityInfo(data);
-      })
-      .catch(() => {
-        setDurabilityInfo(defaultDurabilityInfo);
-      });
-  }, []);
-
-  // When durabilityInfo updates, pick the first option by default
-  useEffect(() => {
-    if (durabilityInfo && Array.isArray(durabilityInfo.options) && durabilityInfo.options.length) {
-      setSelectedId(durabilityInfo.options[0].id);
-    }
-  }, [durabilityInfo]);
-
+export default function DurabilityOptions(durabilityInfo, selectedId, setSelectedId) {
   return (
     <div style={{ border: '2px solid #1976d2', borderRadius: '8px', padding: '1rem', background: '#181818ff', maxWidth: '600px', margin: '0 auto', marginTop: '1.5rem' }}>
       {!durabilityInfo && (

@@ -74,6 +74,13 @@ namespace UltraDataBurningROM.Server.Controllers
     }
 
     [Serializable]
+    public class BurnInfo
+    {
+        public RomInfo Fields { get; set; } = new RomInfo();
+        public ulong DurabilityOptionId { get; set; }
+    }
+
+    [Serializable]
     public class RomInfo
     {
         public string Title { get; set; } = string.Empty;

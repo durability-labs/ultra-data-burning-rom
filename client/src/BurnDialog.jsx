@@ -1,7 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAppContext } from './AppContext';
 import EditableFieldsTable from './EditableFieldsTable';
 import DurabilityOptions from './DurabilityOptions';
+
+const defaultDurabilityInfo = {
+    options: [
+      {
+        id: 0,
+        name: '',
+        priceLine: '',
+        description: '',
+        sponsorLine: ''
+      }
+    ]
+  };
 
 export default function BurnDialog({ open, onClose }) {
   const { username } = useAppContext();
@@ -11,13 +23,30 @@ export default function BurnDialog({ open, onClose }) {
     tags: '',
     description: ''
   });
+  const [selectedId, setSelectedId] = useState(0);
+  const [durabilityInfo, setDurabilityInfo] = useState(defaultDurabilityInfo);
+
+  useEffect(() => {
+    fetch('/durability')
+      .then(res => res.json())
+      .then(data => {
+        setDurabilityInfo(data);
+        setSelectedId(data.options[0]?.id ?? null);
+      })
+      .catch(() => {
+        setDurabilityInfo(defaultDurabilityInfo);
+      });
+  }, []);
 
   async function handleBurn() {
     try {
       const res = await fetch(`/bucket/${encodeURIComponent(username)}/burnrom`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(fields)
+        body: JSON.stringify({
+          fields: fields,
+          durabilityOptionId: selectedId
+        })
       });
       if (!res.ok) {
         console.error('Burn request failed:', res.status, res.statusText);
@@ -52,7 +81,7 @@ export default function BurnDialog({ open, onClose }) {
       }}>
         <h2 style={{marginTop: 0}}>Finalize Burn</h2>
         {EditableFieldsTable(fields, setFields)}
-        <DurabilityOptions />
+        {DurabilityOptions(durabilityInfo, selectedId, setSelectedId)}
         <button
           style={{
             margin: '2rem',
