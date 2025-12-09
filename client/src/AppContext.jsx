@@ -54,8 +54,31 @@ export function AppProvider({ children }) {
     setUsernameState('');
   }
 
+  const [popularInfo, setPopularInfo] = useState(() => {
+    return JSON.parse(localStorage.getItem('popularinfo')) || {
+      roms: [],
+      tags: []
+    };
+  });
+  useEffect(() => {
+    if (popularInfo) {
+      localStorage.setItem('popularinfo', JSON.stringify(popularInfo));
+    }
+  }, [popularInfo]);
+
+  const [searchResult, setSearchResult] = useState(() => {
+    return JSON.parse(localStorage.getItem('searchresult')) || {
+      roms: []
+    };
+  });
+  useEffect(() => {
+    if (searchResult) {
+      localStorage.setItem('searchresult', JSON.stringify(searchResult));
+    }
+  }, [searchResult]);
+
   return (
-    <AppContext.Provider value={{ username, setUsername, clearUsername, activeTab, setActiveTab, romCid, setRomCid }}>
+    <AppContext.Provider value={{ username, setUsername, clearUsername, activeTab, setActiveTab, romCid, setRomCid, popularInfo, setPopularInfo, searchResult, setSearchResult }}>
       {children}
     </AppContext.Provider>
   );

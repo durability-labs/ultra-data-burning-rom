@@ -6,7 +6,7 @@ import { useAppContext } from './AppContext';
 
 export default function TabComponent() {
   const { activeTab, setActiveTab } = useAppContext();
-  const tabs = ["Upload", "Catalogue", "Download"];
+  const tabs = ["Upload and Burn", "Browse the Catalogue", "Mount and Download"];
   return (
     <div style={{display: 'flex', flexDirection: 'column', height: '100%', width: '100%'}}>
       <div style={{
