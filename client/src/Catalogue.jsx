@@ -2,7 +2,7 @@ import React, {useEffect, useState} from 'react';
 import { useAppContext } from './AppContext';
 
 export default function Catalogue() {
-  const { popularInfo, setPopularInfo, searchResult, setSearchResult } = useAppContext();
+  const { popularInfo, setPopularInfo, searchResult, setSearchResult, setRomCid, setActiveTab } = useAppContext();
   const [query, setQuery] = useState('');
 
   useEffect(() => {
@@ -35,6 +35,11 @@ export default function Catalogue() {
       .catch(() => {
         // ignore errors; leave previous results
       });
+  }
+
+  function handleOpenRom(romCid) {
+    setRomCid(romCid);
+    setActiveTab(2);
   }
 
   return <>
@@ -85,6 +90,72 @@ export default function Catalogue() {
             </button>
           ))}
         </div>
+      </div>
+    </div>
+    <div style={{ border: '2px solid #1976d2', borderRadius: '8px', padding: '1rem', margin: '1rem', background: '#181818ff', maxWidth: '600px', margin: '0 auto' }}>
+      <div style={{ borderBottom: '1px solid #ccc', textAlign: 'left', padding: '8px' }}>Results</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '0.75rem' }}>
+        {(searchResult?.roms?.length ? searchResult.roms : []).map((rom, index) => {
+          const cardKey = rom?.romCid;
+          return (
+            <div
+              key={cardKey}
+              style={{
+                width: '90%',
+                border: '1px solid #2c2c2c',
+                borderRadius: '8px',
+                padding: '0.75rem',
+                background: '#0f0f0f',
+                boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
+                textAlign: 'left'
+              }}
+            >
+              <div style={{display: 'grid',gridTemplateColumns: '120px 1fr',alignItems: 'start',gap: '0.5rem',padding: '0.15rem 0'}}>
+                <div style={{ color: '#a8c7ff', fontWeight: 600, textTransform: 'capitalize' }}>Title</div>
+                <div style={{ color: '#e0e0e0', wordBreak: 'break-word' }}>{rom.info.title}</div>
+              </div>
+
+              <div style={{display: 'grid',gridTemplateColumns: '120px 1fr',alignItems: 'start',gap: '0.5rem',padding: '0.15rem 0'}}>
+                <div style={{ color: '#a8c7ff', fontWeight: 600, textTransform: 'capitalize' }}>Author</div>
+                <div style={{ color: '#e0e0e0', wordBreak: 'break-word' }}>{rom.info.author}</div>
+              </div>
+
+              <div style={{display: 'grid',gridTemplateColumns: '120px 1fr',alignItems: 'start',gap: '0.5rem',padding: '0.15rem 0'}}>
+                <div style={{ color: '#a8c7ff', fontWeight: 600, textTransform: 'capitalize' }}>Tags</div>
+                <div style={{ color: '#e0e0e0', wordBreak: 'break-word' }}>{rom.info.tags}</div>
+              </div>
+
+              <div style={{ color: '#e0e0e0', wordBreak: 'break-word' }}>{rom.info.description}</div>
+              <div style={{ color: '#e0e0e0', wordBreak: 'break-word' }}>{rom.entries.length} files</div>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
+                <button
+                  onClick={() => handleOpenRom(rom.romCid)}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.35rem',
+                    padding: '0.4rem 0.75rem',
+                    background: '#1976d2',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <span>Open</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="9 18 15 12 9 6" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          );
+        })}
+        {(!searchResult?.roms || searchResult.roms.length === 0) && (
+          <div style={{ color: '#aaa', textAlign: 'center', padding: '0.5rem' }}>
+            No results yet. Try a search or load popular ROMs.
+          </div>
+        )}
       </div>
     </div>
   </>

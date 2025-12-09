@@ -63,6 +63,27 @@ namespace UltraDataBurningROM.Server.Controllers
                         Tags = "search"
                     },
                     Mounted = false
+                },
+                new Rom
+                {
+                    RomCid = "serach2",
+                    Entries = [
+                        new BucketEntry
+                        {
+                            Filename = "serach2file.txt",
+                            ByteSize = 123456,
+                            Id = 1202
+                        }
+                    ],
+                    ExpiryUtc = new DateTimeOffset(DateTime.UtcNow.AddHours(3)).ToUnixTimeMilliseconds(),
+                    Info = new RomInfo
+                    {
+                        Title = "serach2",
+                        Author = "mr a",
+                        Description = "everyone finds this one",
+                        Tags = "search"
+                    },
+                    Mounted = false
                 }
             ]
         };
