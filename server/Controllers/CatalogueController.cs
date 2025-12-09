@@ -28,7 +28,7 @@ namespace UltraDataBurningROM.Server.Controllers
                         Description = "everyone likes this one",
                         Tags = "popular"
                     },
-                    Mounted = false
+                    MountState = 0
                 }
             ],
             Tags =
@@ -63,7 +63,7 @@ namespace UltraDataBurningROM.Server.Controllers
                         Description = "everyone finds this one",
                         Tags = "search"
                     },
-                    Mounted = false
+                    MountState = 0
                 },
                 new Rom
                 {
@@ -85,7 +85,7 @@ namespace UltraDataBurningROM.Server.Controllers
                         Description = "everyone finds this one",
                         Tags = "search"
                     },
-                    Mounted = false
+                    MountState = 0
                 }
             ]
         };

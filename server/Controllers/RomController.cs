@@ -9,7 +9,7 @@ namespace UltraDataBurningROM.Server.Controllers
         private static readonly Rom rom = new Rom()
         {
             RomCid = "romcid1",
-            Mounted = true,
+            MountState = 0,
             Info = new RomInfo()
             {
                 Title = "title1",
@@ -26,7 +26,7 @@ namespace UltraDataBurningROM.Server.Controllers
                     Filename = "file.bin"
                 }
             ],
-            MountExpiryUtc = new DateTimeOffset(DateTime.UtcNow.AddHours(3)).ToUnixTimeMilliseconds(),
+            MountExpiryUtc = 0,
             StorageExpiryUtc = new DateTimeOffset(DateTime.UtcNow.AddHours(3)).ToUnixTimeMilliseconds()
         };
 
@@ -39,14 +39,27 @@ namespace UltraDataBurningROM.Server.Controllers
         [HttpPost("{username}/{romcid}/mount")]
         public async Task<IActionResult> Mount(string username, string romcid)
         {
-            rom.Mounted = true;
+            if (rom.MountState == 0)
+            {
+                rom.MountState = 1;
+                rom.MountExpiryUtc = new DateTimeOffset(DateTime.UtcNow.AddHours(3)).ToUnixTimeMilliseconds();
+                var _ = Task.Run(() =>
+                {
+                    Thread.Sleep(TimeSpan.FromSeconds(10));
+                    rom.MountState = 2;
+                });
+            }
+
             return Ok(rom);
         }
 
         [HttpPost("{username}/{romcid}/unmount")]
         public async Task<IActionResult> Unmount(string username, string romcid)
         {
-            rom.Mounted = false;
+            if (rom.MountState == 2)
+            {
+                rom.MountState = 0;
+            }
             return Ok(rom);
         }
 
@@ -75,7 +88,7 @@ namespace UltraDataBurningROM.Server.Controllers
     public class Rom
     {
         public string RomCid { get; set; } = string.Empty;
-        public bool Mounted { get; set; } = false;
+        public int MountState { get; set; } = 0;
         public RomInfo Info { get; set; } = new RomInfo();
         public BucketEntry[] Entries { get; set; } = Array.Empty<BucketEntry>();
         public long MountExpiryUtc { get; set; } = 0;

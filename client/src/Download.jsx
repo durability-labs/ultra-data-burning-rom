@@ -5,7 +5,7 @@ import formatBytes from './format';
 
 const defaultRom = {
     romCid: "",
-    mounted: false,
+    mountState: 0,
     info: {
       title: "",
       author: "",
@@ -199,7 +199,7 @@ export default function Download() {
                 <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <span>{formatBytes(file.byteSize)}</span>
-                    {rom.mounted && (
+                    {rom.mountState === 2 && (
                       <button
                         onClick={() => handleDownload(file, idx)}
                         title="Download"
@@ -225,7 +225,7 @@ export default function Download() {
           </tbody>
         </table>
       </div>
-      {(rom.mounted) && 
+      {(rom.mountState === 2) && 
       <>
         <div style={{ maxWidth: '600px', margin: '1.5rem auto 1.5rem auto', textAlign: 'center' }}>
           <button
@@ -260,49 +260,10 @@ export default function Download() {
         <div style={{ marginBottom: '0.5rem', color: '#fff', fontSize: '0.75rem' }}>
           ROM will automatically unmount: {new Date(rom.mountExpiryUtc).toLocaleString()}
         </div>
-        <div style={{ marginBottom: '0.5rem', color: '#fff', fontSize: '0.75rem' }}>
-          ROM will expire: {new Date(rom.storageExpiryUtc).toLocaleString()}
-        </div>
-        {(((rom.storageExpiryUtc - Date.now()) < 24 * 60 * 60 * 1000) && 
-          <div>          
-              <button
-              onClick={handleExtendStorage}
-              style={{
-                  padding: '0.5rem 0.75rem',
-                  background: '#1976d2',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: '6px',
-                  cursor: 'pointer'
-              }}
-            >
-              Renew ROM Storage
-            </button>
-            {showExtendOptions && (
-              <>
-                {DurabilityOptions(durabilityInfo, selectedDurabilityId, handleSelectDurability)}
-                <div style={{ marginTop: '1rem' }}>
-                  <button
-                    onClick={() => setShowExtendOptions(false)}
-                    style={{
-                      padding: '0.5rem 0.75rem',
-                      background: '#2a2a2a',
-                      color: '#fff',
-                      border: '1px solid #444',
-                      borderRadius: '6px',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </>
-            )}
-          </div>)}
       </>
       }
       {
-        (!rom.mounted) &&
+        (rom.mountState === 0) &&
         <>
           <div style={{ maxWidth: '600px', margin: '1.5rem auto 1.5rem auto', textAlign: 'center' }}>
             <button
@@ -321,5 +282,52 @@ export default function Download() {
           </div>
         </>
       }
+      {
+        (rom.mountState === 1) &&
+        <>
+          <div style={{ maxWidth: '600px', margin: '1.5rem auto 1.5rem auto', textAlign: 'center' }}>
+            Spinning it up... Stand by...
+          </div>
+        </>
+      }
+      <div style={{ marginBottom: '0.5rem', color: '#fff', fontSize: '0.75rem' }}>
+        ROM will expire: {new Date(rom.storageExpiryUtc).toLocaleString()}
+      </div>
+      {(((rom.storageExpiryUtc - Date.now()) < 24 * 60 * 60 * 1000) && 
+        <div>          
+            <button
+            onClick={handleExtendStorage}
+            style={{
+                padding: '0.5rem 0.75rem',
+                background: '#1976d2',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer'
+            }}
+          >
+            Renew ROM Storage
+          </button>
+          {showExtendOptions && (
+            <>
+              {DurabilityOptions(durabilityInfo, selectedDurabilityId, handleSelectDurability)}
+              <div style={{ marginTop: '1rem' }}>
+                <button
+                  onClick={() => setShowExtendOptions(false)}
+                  style={{
+                    padding: '0.5rem 0.75rem',
+                    background: '#2a2a2a',
+                    color: '#fff',
+                    border: '1px solid #444',
+                    borderRadius: '6px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </>
+          )}
+        </div>)}
   </>;
 }
