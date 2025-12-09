@@ -2,7 +2,11 @@ using UltraDataBurningROM.Server.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// We use the configured volume size as the max request size.
+var envVar = Environment.GetEnvironmentVariable("BROM_ROMVOLUMESIZE");
+if (string.IsNullOrEmpty(envVar)) throw new Exception("Missing environment variable: BROM_ROMVOLUMESIZE");
+long maxRequestBodySize = Convert.ToInt64(envVar);
+builder.WebHost.ConfigureKestrel(options => { options.Limits.MaxRequestBodySize = maxRequestBodySize; });
 
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
