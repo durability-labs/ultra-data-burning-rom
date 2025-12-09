@@ -26,7 +26,8 @@ namespace UltraDataBurningROM.Server.Controllers
                     Filename = "file.bin"
                 }
             ],
-            ExpiryUtc = new DateTimeOffset(DateTime.UtcNow.AddHours(3)).ToUnixTimeMilliseconds()
+            MountExpiryUtc = new DateTimeOffset(DateTime.UtcNow.AddHours(3)).ToUnixTimeMilliseconds(),
+            StorageExpiryUtc = new DateTimeOffset(DateTime.UtcNow.AddHours(3)).ToUnixTimeMilliseconds()
         };
 
         [HttpGet("{username}/{romcid}")]
@@ -62,6 +63,13 @@ namespace UltraDataBurningROM.Server.Controllers
             // download archive
             return Ok();
         }
+
+        [HttpPost("{username}/{romcid}/extend/{durabilityOptionId}")]
+        public async Task<IActionResult> Extend(string username, string romcid, ulong durabilityOptionId)
+        {
+            Console.WriteLine("extend with id " + durabilityOptionId);
+            return Ok();
+        }
     }
 
     public class Rom
@@ -70,7 +78,8 @@ namespace UltraDataBurningROM.Server.Controllers
         public bool Mounted { get; set; } = false;
         public RomInfo Info { get; set; } = new RomInfo();
         public BucketEntry[] Entries { get; set; } = Array.Empty<BucketEntry>();
-        public long ExpiryUtc { get; set; } = 0;
+        public long MountExpiryUtc { get; set; } = 0;
+        public long StorageExpiryUtc { get; set; } = 0;
     }
 
     [Serializable]

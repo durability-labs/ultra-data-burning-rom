@@ -97,6 +97,7 @@ export default function Catalogue() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '0.75rem' }}>
         {(searchResult?.roms?.length ? searchResult.roms : []).map((rom, index) => {
           const cardKey = rom?.romCid;
+          const expiresSoon = (rom.storageExpiryUtc - Date.now()) < 24 * 60 * 60 * 1000;
           return (
             <div
               key={cardKey}
@@ -127,7 +128,8 @@ export default function Catalogue() {
 
               <div style={{ color: '#e0e0e0', wordBreak: 'break-word' }}>{rom.info.description}</div>
               <div style={{ color: '#e0e0e0', wordBreak: 'break-word' }}>{rom.entries.length} files</div>
-              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '0.5rem', marginTop: '0.5rem' }}>
+                {(expiresSoon && <span style={{ color: '#f3c989', fontSize: '0.8rem' }}>expires soon</span>)}
                 <button
                   onClick={() => handleOpenRom(rom.romCid)}
                   style={{

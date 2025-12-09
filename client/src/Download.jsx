@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useAppContext } from './AppContext';
+import DurabilityOptions from './DurabilityOptions';
 import formatBytes from './format';
 
 const defaultRom = {
@@ -12,12 +13,28 @@ const defaultRom = {
       description: ""
     },
     entries: [],
-    expiryUtc: 0
+    mountExpiryUtc: 0,
+    storageExpiryUtc: 0
   };
+
+const defaultDurabilityInfo = {
+  options: [
+    {
+      id: 0,
+      name: '',
+      priceLine: '',
+      description: '',
+      sponsorLine: ''
+    }
+  ]
+};
 
 export default function Download() {
   const { username,  romCid } = useAppContext();
   const [rom, setRom] = useState(defaultRom);
+  const [durabilityInfo, setDurabilityInfo] = useState(null);
+  const [selectedDurabilityId, setSelectedDurabilityId] = useState(null);
+  const [showExtendOptions, setShowExtendOptions] = useState(false);
 
   const updateRom = useCallback((user, cid) => {
     if (!user) return;
@@ -103,6 +120,38 @@ export default function Download() {
       if (!res.ok) console.error('Mount failed', res.status, res.statusText);
     } catch (err) { console.error('Error mounting', err); }
     updateRom(username, romCid);
+  }, [username, romCid, updateRom]);
+
+  const handleExtendStorage = useCallback(async () => {
+    if (!username || !romCid) return;
+    setShowExtendOptions(true);
+    try {
+      const res = await fetch('/durability');
+      if (!res.ok) throw new Error('Failed to load durability options');
+      const data = await res.json();
+      setDurabilityInfo(data || defaultDurabilityInfo);
+      setSelectedDurabilityId(data?.options?.[0]?.id ?? null);
+    } catch (err) {
+      console.error('Error loading durability options', err);
+      setDurabilityInfo(defaultDurabilityInfo);
+    }
+  }, [username, romCid]);
+
+  const handleSelectDurability = useCallback(async (optionId) => {
+    if (!username || !romCid) return;
+    setSelectedDurabilityId(optionId);
+    try {
+      const res = await fetch(`/rom/${encodeURIComponent(username)}/${encodeURIComponent(romCid)}/extend/${encodeURIComponent(optionId)}`, { method: 'POST' });
+      if (!res.ok) {
+        console.error('Extend storage failed', res.status, res.statusText);
+        return;
+      }
+      updateRom(username, romCid);
+    } catch (err) {
+      console.error('Error extending storage', err);
+    } finally {
+      setShowExtendOptions(false);
+    }
   }, [username, romCid, updateRom]);
 
   if (rom.romCid.length === 0) {
@@ -209,8 +258,47 @@ export default function Download() {
           </button>
         </div>
         <div style={{ marginBottom: '0.5rem', color: '#fff', fontSize: '0.75rem' }}>
-          ROM will automatically unmount: {new Date(rom.expiryUtc).toLocaleString()}
+          ROM will automatically unmount: {new Date(rom.mountExpiryUtc).toLocaleString()}
         </div>
+        <div style={{ marginBottom: '0.5rem', color: '#fff', fontSize: '0.75rem' }}>
+          ROM will expire: {new Date(rom.storageExpiryUtc).toLocaleString()}
+        </div>
+        {(((rom.storageExpiryUtc - Date.now()) < 24 * 60 * 60 * 1000) && 
+          <div>          
+              <button
+              onClick={handleExtendStorage}
+              style={{
+                  padding: '0.5rem 0.75rem',
+                  background: '#1976d2',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer'
+              }}
+            >
+              Renew ROM Storage
+            </button>
+            {showExtendOptions && (
+              <>
+                {DurabilityOptions(durabilityInfo, selectedDurabilityId, handleSelectDurability)}
+                <div style={{ marginTop: '1rem' }}>
+                  <button
+                    onClick={() => setShowExtendOptions(false)}
+                    style={{
+                      padding: '0.5rem 0.75rem',
+                      background: '#2a2a2a',
+                      color: '#fff',
+                      border: '1px solid #444',
+                      borderRadius: '6px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </>
+            )}
+          </div>)}
       </>
       }
       {

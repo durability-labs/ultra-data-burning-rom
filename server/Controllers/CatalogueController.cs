@@ -20,7 +20,7 @@ namespace UltraDataBurningROM.Server.Controllers
                             Id = 1202
                         }
                     ],
-                    ExpiryUtc = new DateTimeOffset(DateTime.UtcNow.AddHours(3)).ToUnixTimeMilliseconds(),
+                    MountExpiryUtc = new DateTimeOffset(DateTime.UtcNow.AddHours(3)).ToUnixTimeMilliseconds(),
                     Info = new RomInfo
                     {
                         Title = "popular1",
@@ -54,7 +54,8 @@ namespace UltraDataBurningROM.Server.Controllers
                             Id = 1202
                         }
                     ],
-                    ExpiryUtc = new DateTimeOffset(DateTime.UtcNow.AddHours(3)).ToUnixTimeMilliseconds(),
+                    MountExpiryUtc = new DateTimeOffset(DateTime.UtcNow.AddHours(3)).ToUnixTimeMilliseconds(),
+                    StorageExpiryUtc = new DateTimeOffset(DateTime.UtcNow.AddHours(3)).ToUnixTimeMilliseconds(),
                     Info = new RomInfo
                     {
                         Title = "serach1",
@@ -75,7 +76,8 @@ namespace UltraDataBurningROM.Server.Controllers
                             Id = 1202
                         }
                     ],
-                    ExpiryUtc = new DateTimeOffset(DateTime.UtcNow.AddHours(3)).ToUnixTimeMilliseconds(),
+                    MountExpiryUtc = new DateTimeOffset(DateTime.UtcNow.AddHours(3)).ToUnixTimeMilliseconds(),
+                    StorageExpiryUtc = new DateTimeOffset(DateTime.UtcNow.AddDays(3)).ToUnixTimeMilliseconds(),
                     Info = new RomInfo
                     {
                         Title = "serach2",
