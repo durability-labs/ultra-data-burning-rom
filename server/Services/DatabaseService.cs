@@ -16,6 +16,15 @@ namespace UltraDataBurningROM.Server.Services
 
         public DatabaseService()
         {
+            CreateDirectory(rootPath);
+            CreateDirectory(Path.Combine(rootPath, typeof(DbUser).Name.ToLowerInvariant()));
+            CreateDirectory(Path.Combine(rootPath, typeof(DbMount).Name.ToLowerInvariant()));
+            CreateDirectory(Path.Combine(rootPath, typeof(DbRom).Name.ToLowerInvariant()));
+        }
+
+        private void CreateDirectory(string rootPath)
+        {
+            Console.WriteLine("createdir: " + rootPath);
             Directory.CreateDirectory(rootPath);
         }
 

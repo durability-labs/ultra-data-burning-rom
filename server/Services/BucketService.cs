@@ -4,6 +4,8 @@
     {
         Bucket GetBucket(string username);
         void DeleteFile(string username, string filename);
+        string GetWriteableBucketFilePath(string username, string filename);
+        void Refresh(string username);
     }
 
     public class BucketService : IBucketService
@@ -17,6 +19,7 @@
         {
             var envVar = Environment.GetEnvironmentVariable("BROM_ROMVOLUMESIZE");
             if (string.IsNullOrEmpty(envVar)) throw new Exception("Missing environment variable: BROM_ROMVOLUMESIZE");
+            Console.WriteLine("env: " + envVar);
             volumeSize = Convert.ToUInt64(envVar);
             this.dbService = dbService;
             this.userService = userService;
@@ -44,6 +47,21 @@
             if (!userService.IsValid(username)) return;
             var user = userService.GetUser(username);
             mountService.DeleteFile(user.BucketMountId, filename);
+        }
+
+        public string GetWriteableBucketFilePath(string username, string filename)
+        {
+            if (!userService.IsValid(username)) return string.Empty;
+            var user = userService.GetUser(username);
+            var mount = mountService.Get(user.BucketMountId);
+            return Path.Combine(mount.Path, filename);
+        }
+
+        public void Refresh(string username)
+        {
+            if (!userService.IsValid(username)) return;
+            var user = userService.GetUser(username);
+            mountService.ClearCache(user.BucketMountId);
         }
     }
 

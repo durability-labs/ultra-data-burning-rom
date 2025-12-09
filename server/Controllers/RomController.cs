@@ -22,7 +22,6 @@ namespace UltraDataBurningROM.Server.Controllers
             [
                 new FileEntry()
                 {
-                    Id = 101,
                     ByteSize = 1234567,
                     Filename = "file.bin"
                 }

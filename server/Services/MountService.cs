@@ -6,6 +6,7 @@
         DbMount Get(string mountId);
         FileEntry[] GetFileEntries(string mountId);
         void DeleteFile(string mountId, string filename);
+        void ClearCache(string mountId);
     }
 
     public class MountService : IMountService
@@ -17,6 +18,8 @@
         public MountService(IDatabaseService dbService)
         {
             this.dbService = dbService;
+
+            Directory.CreateDirectory(rootPath);
         }
 
         public DbMount CreateNewBucketMount()
@@ -30,6 +33,7 @@
                 State = MountState.Bucket
             };
             dbService.Save(mount);
+            Directory.CreateDirectory(mount.Path);
             return mount;
         }
 
@@ -54,7 +58,7 @@
                 var info = new FileInfo(f);
                 return new FileEntry
                 {
-                    Filename = f,
+                    Filename = Path.GetFileName(f),
                     ByteSize = Convert.ToUInt64(info.Length)
                 };
             }).ToList();
@@ -77,6 +81,11 @@
 
             var path = Path.Combine(mount.Path, filename);
             if (File.Exists(path)) File.Delete(path);
+        }
+
+        public void ClearCache(string mountId)
+        {
+            cache.ClearKey(mountId);
         }
     }
 }

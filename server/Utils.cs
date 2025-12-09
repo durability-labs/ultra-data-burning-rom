@@ -40,5 +40,13 @@ namespace UltraDataBurningROM.Server
         {
             return _map.TryGetValue(key, out maybeValue);
         }
+
+        public void ClearKey(TKey key)
+        {
+            if (_map.ContainsKey(key))
+            {
+                _map.Remove(key);
+            }
+        }
     }
 }

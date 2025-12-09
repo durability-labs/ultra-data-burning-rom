@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using UltraDataBurningROM.Server.Services;
 
 namespace UltraDataBurningROM.Server.Controllers
 {
@@ -17,7 +18,6 @@ namespace UltraDataBurningROM.Server.Controllers
                         {
                             Filename = "pop1file.txt",
                             ByteSize = 123456,
-                            Id = 1202
                         }
                     ],
                     MountExpiryUtc = new DateTimeOffset(DateTime.UtcNow.AddHours(3)).ToUnixTimeMilliseconds(),
@@ -51,7 +51,6 @@ namespace UltraDataBurningROM.Server.Controllers
                         {
                             Filename = "serach1file.txt",
                             ByteSize = 123456,
-                            Id = 1202
                         }
                     ],
                     MountExpiryUtc = new DateTimeOffset(DateTime.UtcNow.AddHours(3)).ToUnixTimeMilliseconds(),
@@ -73,7 +72,6 @@ namespace UltraDataBurningROM.Server.Controllers
                         {
                             Filename = "serach2file.txt",
                             ByteSize = 123456,
-                            Id = 1202
                         }
                     ],
                     MountExpiryUtc = new DateTimeOffset(DateTime.UtcNow.AddHours(3)).ToUnixTimeMilliseconds(),

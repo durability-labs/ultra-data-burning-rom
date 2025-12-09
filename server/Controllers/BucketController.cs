@@ -1,8 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Filters;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
-using Microsoft.AspNetCore.WebUtilities;
-using Microsoft.Net.Http.Headers;
 using UltraDataBurningROM.Server.Services;
 
 namespace UltraDataBurningROM.Server.Controllers
@@ -11,6 +7,8 @@ namespace UltraDataBurningROM.Server.Controllers
     [Route("bucket")]
     public class BucketController : ControllerBase
     {
+        private readonly IBucketService bucketService;
+
         public BucketController(IBucketService bucketService)
         {
             this.bucketService = bucketService;
@@ -36,23 +34,28 @@ namespace UltraDataBurningROM.Server.Controllers
         }
 
         [HttpPost("{username}")]
-        [DisableFormValueModelBinding]
-        public async Task<IActionResult> UploadMultipartReader(string username)
+        public async Task<IActionResult> UploadMultipartReader(string username, IFormFile file)
         {
             if (!Request.ContentType?.StartsWith("multipart/form-data") ?? true)
             {
                 return BadRequest("The request does not contain valid multipart form data.");
             }
 
-            var boundary = HeaderUtilities.RemoveQuotes(MediaTypeHeaderValue.Parse(Request.ContentType).Boundary).Value;
-            if (string.IsNullOrWhiteSpace(boundary))
+            var filename = file.FileName;
+            Console.WriteLine("receiving file: " + filename);
+
+            var fullPath = bucketService.GetWriteableBucketFilePath(username, filename);
+            Console.WriteLine("fullPath: " + fullPath);
+            if (System.IO.File.Exists(fullPath)) return BadRequest("Already exists");
+
+            using (var stream = System.IO.File.Create(fullPath))
             {
-                return BadRequest("Missing boundary in multipart form data.");
+                await file.CopyToAsync(stream);
             }
 
-            var cancellationToken = HttpContext.RequestAborted;
-            var filePath = await SaveViaMultipartReaderAsync(boundary, Request.Body, cancellationToken);
-            return Ok("Saved file at " + filePath);
+            Console.WriteLine("refreshing");
+            bucketService.Refresh(username);
+            return Ok();
         }
 
         [HttpPost("{username}/burnrom")]
@@ -65,16 +68,16 @@ namespace UltraDataBurningROM.Server.Controllers
             Console.WriteLine("rominfo: " + romInfo.Tags);
             Console.WriteLine("rominfo: " + romInfo.Description);
 
-            var _ = Task.Run(() =>
-            {
-                while (bucket.State < 5)
-                {
-                    bucket.State++;
-                    Thread.Sleep(TimeSpan.FromSeconds(1));
-                }
-                bucket.State = 5;
-                bucket.RomCid = "romCIDhere";
-            });
+            //var _ = Task.Run(() =>
+            //{
+            //    while (bucket.State < 5)
+            //    {
+            //        bucket.State++;
+            //        Thread.Sleep(TimeSpan.FromSeconds(1));
+            //    }
+            //    bucket.State = 5;
+            //    bucket.RomCid = "romCIDhere";
+            //});
             Console.WriteLine("Burn!");
             return Ok();
         }
@@ -82,102 +85,101 @@ namespace UltraDataBurningROM.Server.Controllers
         [HttpPost("{username}/clear")]
         public async Task<IActionResult> Clear(string username)
         {
-            if (bucket.State == 5)
-            {
-                bucket.RomCid = string.Empty;
-                bucket.State = 0;
-            }
+            //if (bucket.State == 5)
+            //{
+            //    bucket.RomCid = string.Empty;
+            //    bucket.State = 0;
+            //}
             return Ok();
         }
 
-        private const string UploadFilePath = "uploadedfile.bin";
-        private const int BufferSize = 1024 * 1024;
-        private readonly IBucketService bucketService;
+        //private const string UploadFilePath = "uploadedfile.bin";
+        //private const int BufferSize = 1024 * 1024;
 
-        public async Task<string> SaveViaMultipartReaderAsync(string boundary, Stream contentStream, CancellationToken cancellationToken)
-        {
-            string targetFilePath = Path.Combine(Directory.GetCurrentDirectory(), UploadFilePath);
-            CheckAndRemoveLocalFile(targetFilePath);
+        //public async Task<string> SaveViaMultipartReaderAsync(string boundary, Stream contentStream, CancellationToken cancellationToken)
+        //{
+        //    string targetFilePath = Path.Combine(Directory.GetCurrentDirectory(), UploadFilePath);
+        //    CheckAndRemoveLocalFile(targetFilePath);
 
-            using FileStream outputFileStream = new FileStream(
-                path: targetFilePath,
-                mode: FileMode.Create,
-                access: FileAccess.Write,
-                share: FileShare.None,
-                bufferSize: BufferSize,
-                useAsync: true);
+        //    using FileStream outputFileStream = new FileStream(
+        //        path: targetFilePath,
+        //        mode: FileMode.Create,
+        //        access: FileAccess.Write,
+        //        share: FileShare.None,
+        //        bufferSize: BufferSize,
+        //        useAsync: true);
 
-            var reader = new MultipartReader(boundary, contentStream);
-            MultipartSection? section;
-            long totalBytesRead = 0;
+        //    var reader = new MultipartReader(boundary, contentStream);
+        //    MultipartSection? section;
+        //    long totalBytesRead = 0;
 
-            // Process each section in the multipart body
-            targetFilePath = "aaaoutput:";
-            targetFilePath += "boundary:" + boundary;
-            targetFilePath += "canread:" + contentStream.CanRead;
-            try
-            {
-                while ((section = await reader.ReadNextSectionAsync(cancellationToken)) != null)
-                {
-                    targetFilePath += "start,";
-                    // Check if the section is a file
-                    var contentDisposition = section.GetContentDispositionHeader();
-                    if (contentDisposition != null && contentDisposition.IsFileDisposition())
-                    {
-                        targetFilePath += "isfile,";
-                        //_logger.LogInformation($"Processing file: {contentDisposition.FileName.Value}");
+        //    // Process each section in the multipart body
+        //    targetFilePath = "aaaoutput:";
+        //    targetFilePath += "boundary:" + boundary;
+        //    targetFilePath += "canread:" + contentStream.CanRead;
+        //    try
+        //    {
+        //        while ((section = await reader.ReadNextSectionAsync(cancellationToken)) != null)
+        //        {
+        //            targetFilePath += "start,";
+        //            // Check if the section is a file
+        //            var contentDisposition = section.GetContentDispositionHeader();
+        //            if (contentDisposition != null && contentDisposition.IsFileDisposition())
+        //            {
+        //                targetFilePath += "isfile,";
+        //                //_logger.LogInformation($"Processing file: {contentDisposition.FileName.Value}");
 
-                        // Write the file content to the target file
-                        await section.Body.CopyToAsync(outputFileStream, cancellationToken);
-                        targetFilePath += "bodycopyto,";
-                        totalBytesRead += section.Body.Length;
-                    }
-                    else if (contentDisposition != null && contentDisposition.IsFormDisposition())
-                    {
-                        targetFilePath += "isform,";
-                        // Handle metadata (form fields)
-                        string key = contentDisposition.Name.Value!;
-                        using var streamReader = new StreamReader(section.Body);
-                        targetFilePath += "readtoend,";
-                        string value = await streamReader.ReadToEndAsync(cancellationToken);
-                        //_logger.LogInformation($"Received metadata: {key} = {value}");
-                        targetFilePath += $"{key}={value},";
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                targetFilePath += "exception" + ex;
-            }
-            targetFilePath += "done";
+        //                // Write the file content to the target file
+        //                await section.Body.CopyToAsync(outputFileStream, cancellationToken);
+        //                targetFilePath += "bodycopyto,";
+        //                totalBytesRead += section.Body.Length;
+        //            }
+        //            else if (contentDisposition != null && contentDisposition.IsFormDisposition())
+        //            {
+        //                targetFilePath += "isform,";
+        //                // Handle metadata (form fields)
+        //                string key = contentDisposition.Name.Value!;
+        //                using var streamReader = new StreamReader(section.Body);
+        //                targetFilePath += "readtoend,";
+        //                string value = await streamReader.ReadToEndAsync(cancellationToken);
+        //                //_logger.LogInformation($"Received metadata: {key} = {value}");
+        //                targetFilePath += $"{key}={value},";
+        //            }
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        targetFilePath += "exception" + ex;
+        //    }
+        //    targetFilePath += "done";
 
-            //_logger.LogInformation($"File upload completed (via multipart). Total bytes read: {totalBytesRead} bytes.");
-            return targetFilePath;
-        }
+        //    //_logger.LogInformation($"File upload completed (via multipart). Total bytes read: {totalBytesRead} bytes.");
+        //    return targetFilePath;
+        //}
 
-        private void CheckAndRemoveLocalFile(string filePath)
-        {
-            if (System.IO.File.Exists(filePath))
-            {
-                System.IO.File.Delete(filePath);
-                //_logger.LogDebug($"Removed existing output file: {filePath}");
-            }
-        }
+        //private void CheckAndRemoveLocalFile(string filePath)
+        //{
+        //    if (System.IO.File.Exists(filePath))
+        //    {
+        //        System.IO.File.Delete(filePath);
+        //        //_logger.LogDebug($"Removed existing output file: {filePath}");
+        //    }
+        //}
     }
 
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
-    public class DisableFormValueModelBindingAttribute : Attribute, IResourceFilter
-    {
-        public void OnResourceExecuting(ResourceExecutingContext context)
-        {
-            var factories = context.ValueProviderFactories;
-            factories.RemoveType<FormValueProviderFactory>();
-            factories.RemoveType<JQueryFormValueProviderFactory>();
-            factories.RemoveType<FormFileValueProviderFactory>();
-        }
+    //[AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
+    //public class DisableFormValueModelBindingAttribute : Attribute, IResourceFilter
+    //{
+    //    public void OnResourceExecuting(ResourceExecutingContext context)
+    //    {
+    //        var factories = context.ValueProviderFactories;
+    //        factories.RemoveType<FormValueProviderFactory>();
+    //        factories.RemoveType<JQueryFormValueProviderFactory>();
+    //        factories.RemoveType<FormFileValueProviderFactory>();
+    //    }
 
-        public void OnResourceExecuted(ResourceExecutedContext context)
-        {
-        }
-    }
+    //    public void OnResourceExecuted(ResourceExecutedContext context)
+    //    {
+    //    }
+    //}
 }
