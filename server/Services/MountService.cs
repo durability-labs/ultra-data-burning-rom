@@ -21,7 +21,7 @@
             this.dbService = dbService;
 
             Directory.CreateDirectory(rootPath);
-            Directory.CreateDirectory("/zips");
+            Directory.CreateDirectory("./zips");
         }
 
         public DbMount CreateNewBucketMount()

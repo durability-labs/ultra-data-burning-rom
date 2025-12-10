@@ -4,11 +4,13 @@
     {
         public static ulong VolumeSize { get; private set; }
         public static string[] KnownUsers { get; private set; }
+        public static string[] ArchivistEndpoints { get; private set; }
 
         static EnvConfig()
         {
             VolumeSize = Convert.ToUInt64(Get("BROM_ROMVOLUMESIZE"));
             KnownUsers = Get("BROM_USERNAMES").Split(";", StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+            ArchivistEndpoints = Get("ARCHIVISTENDPOINTS").Split(";", StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
         }
 
         private static string Get(string name)

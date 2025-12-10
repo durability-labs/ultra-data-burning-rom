@@ -1,9 +1,17 @@
-﻿namespace UltraDataBurningROM.Server.Services
+﻿using ArchivistClient;
+
+namespace UltraDataBurningROM.Server.Services
 {
     public interface IStorageService
     {
         void Initialize();
         Durability GetDurability();
+        IStorageNode TakeNode();
+        void ReleaseNode(IStorageNode node);
+    }
+
+    public interface IStorageNode
+    {
         string Upload(string filepath);
         PurchaseResponse PurchaseStorage(string cid, ulong optionId);
     }
@@ -59,6 +67,8 @@
         ];
 
         private readonly Durability durability;
+        private readonly List<StorageNode> nodes = new List<StorageNode>();
+        private static readonly object _nodesLock = new object();
 
         public StorageService()
         {
@@ -70,7 +80,26 @@
 
         public void Initialize()
         {
-            // ping nodes, all OK?
+            var endpoints = EnvConfig.ArchivistEndpoints;
+            nodes.AddRange(
+                endpoints.Select(e =>
+                {
+                    Console.WriteLine("Pinging Archivist node at: " + e);
+                    var instance = new ArchivistInstance(e);
+
+                    while (!instance.Ping())
+                    {
+                        Console.WriteLine("Ping...");
+                        Thread.Sleep(TimeSpan.FromSeconds(10));
+                    }
+
+                    return new StorageNode(
+                        instance,
+                        config
+                    );
+                })
+            );
+            Console.WriteLine("Storage service initialized.");
         }
 
         public Durability GetDurability()
@@ -78,14 +107,32 @@
             return durability;
         }
 
-        public string Upload(string filepath)
+        public IStorageNode TakeNode()
         {
-            return "todo_uploadcid_" + filepath;
+            while (true)
+            {
+                lock (_nodesLock)
+                {
+                    foreach (var n in nodes)
+                    {
+                        if (!n.InUse)
+                        {
+                            n.InUse = true;
+                            return n;
+                        }
+                    }
+                }
+                Thread.Sleep(TimeSpan.FromSeconds(1));
+            }
         }
 
-        public PurchaseResponse PurchaseStorage(string cid, ulong optionId)
+        public void ReleaseNode(IStorageNode node)
         {
-            throw new NotImplementedException();
+            lock (_nodesLock)
+            {
+                var n = (StorageNode)node;
+                n.InUse = false;
+            }
         }
 
         private static string GetPriceLine(long bytes, TimeSpan timeSpan)
@@ -104,6 +151,54 @@
             decimal seconds = Convert.ToDecimal(timeSpan.TotalSeconds);
 
             return pricePerBytePerSecond * b * seconds;
+        }
+    }
+
+    public class StorageNode : IStorageNode
+    {
+        private readonly ArchivistInstance instance;
+        private readonly DurabilityConfig[] config;
+
+        public bool InUse { get; set; } = false;
+
+        public StorageNode(ArchivistInstance instance, DurabilityConfig[] config)
+        {
+            this.instance = instance;
+            this.config = config;
+        }
+
+        public string Upload(string filepath)
+        {
+            return instance.UploadFile(filepath);
+        }
+
+        public PurchaseResponse PurchaseStorage(string cid, ulong optionId)
+        {
+            var selected = config.Single(c => c.Representation.Id == optionId);
+
+            var purchaseId = instance.PurchaseStorage(cid,
+                selected.Nodes,
+                selected.Tolerance,
+                selected.Duration,
+                selected.Expiry,
+                selected.PricePerBytePerSecond,
+                selected.CollateralPerByte,
+                selected.ProofProbability
+            );
+
+            while (!instance.IsPurchaseStarted(purchaseId))
+            {
+                Thread.Sleep(TimeSpan.FromSeconds(1));
+            }
+            var startUtc = DateTime.UtcNow - TimeSpan.FromSeconds(30.0);
+            var purchaseCid = instance.GetPurchaseCid(purchaseId);
+            var finishUtc = startUtc + selected.Duration;
+
+            return new PurchaseResponse
+            {
+                FinishUtc = finishUtc,
+                PurchaseCid = purchaseCid,
+            };
         }
     }
 

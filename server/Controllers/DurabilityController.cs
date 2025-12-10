@@ -14,7 +14,6 @@ namespace UltraDataBurningROM.Server.Controllers
             this.storageService = storageService;
         }
 
-
         [HttpGet]
         public async Task<IActionResult> Get()
         {

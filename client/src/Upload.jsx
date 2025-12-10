@@ -42,6 +42,6 @@ export default function Upload() {
     return () => clearInterval(id);
   }, [username, updateBucket]);
 
-  if (bucket.state > 0) return UploadBusy(username, setActiveTab, setRomCid, bucket);
-  return UploadOpen(username, bucket, bytesUsed);
+  if (bucket.state == 1) return UploadOpen(username, bucket, bytesUsed);
+  return UploadBusy(username, setActiveTab, setRomCid, bucket);
 }

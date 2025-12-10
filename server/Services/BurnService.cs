@@ -55,16 +55,21 @@ namespace UltraDataBurningROM.Server.Services
         {
             Task.Run(() =>
             {
+                var node = storageService.TakeNode();
                 try
                 {
                     Console.WriteLine("Starting burn for " + user.Username);
-                    var run = new WorkerRun(dbService, mountService, storageService, user, burnInfo);
+                    var run = new WorkerRun(dbService, mountService, node, user, burnInfo);
                     run.RunWorker();
                 }
                 catch (Exception ex)
                 {
                     Console.WriteLine("Burn failed with exception: " + ex);
                     ReturnUserToOpenState(user);
+                }
+                finally
+                {
+                    storageService.ReleaseNode(node);
                 }
             });
         }
@@ -91,18 +96,18 @@ namespace UltraDataBurningROM.Server.Services
     {
         private readonly IDatabaseService dbService;
         private readonly IMountService mountService;
-        private readonly IStorageService storageService;
+        private readonly IStorageNode storageNode;
         private readonly DbUser user;
         private readonly BurnInfo burnInfo;
         private DbMount bucketMount;
         private string uploadCid = string.Empty;
         private PurchaseResponse purchase = new PurchaseResponse();
 
-        public WorkerRun(IDatabaseService dbService, IMountService mountService, IStorageService storageService, DbUser user, BurnInfo burnInfo)
+        public WorkerRun(IDatabaseService dbService, IMountService mountService, IStorageNode storageNode, DbUser user, BurnInfo burnInfo)
         {
             this.dbService = dbService;
             this.mountService = mountService;
-            this.storageService = storageService;
+            this.storageNode = storageNode;
             this.user = user;
             this.burnInfo = burnInfo;
 
@@ -159,12 +164,12 @@ namespace UltraDataBurningROM.Server.Services
 
         private void PurchaseStorage()
         {
-            purchase = storageService.PurchaseStorage(uploadCid, burnInfo.DurabilityOptionId);
+            purchase = storageNode.PurchaseStorage(uploadCid, burnInfo.DurabilityOptionId);
         }
 
         private void UploadZipFile()
         {
-            uploadCid = storageService.Upload(bucketMount.GetZipFilePath());
+            uploadCid = storageNode.Upload(bucketMount.GetZipFilePath());
         }
 
         private void WriteZipFile()
@@ -201,7 +206,7 @@ namespace UltraDataBurningROM.Server.Services
     {
         public static string GetZipFilePath(this DbMount mount)
         {
-            return Path.Combine($"/zips/__{mount.Id.ToLowerInvariant()}.zip");
+            return Path.Combine($"./zips/__{mount.Id.ToLowerInvariant()}.zip");
         }
 
         public static string GetInfoJsonFilePath(this DbMount mount)

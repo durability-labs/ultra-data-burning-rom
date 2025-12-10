@@ -8,42 +8,15 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ARCHIVISTENDPOINTS=
-          http://archivist-1:8081;
-          http://archivist-2:8082
+          http://archivist1:8082;
+          http://archivist2:8083
       - BROM_USERNAMES=thatben
       - BROM_ROMVOLUMESIZE=734003200
     volumes:
       - ./volumes/brom/database:/database
       - ./volumes/brom/mounts:/mounts
 
-  archivist-1:
-    container_name: archivist-1
-    image: durabilitylabs/archivist-node:sha-80ebcd7-dist-tests
-    command:
-      - archivist
-      - persistence
-    environment:
-      - NETWORK=devnet
-      - ARCHIVIST_DATA_DIR=/data
-      - ARCHIVIST_LOG_LEVEL=TRACE;warn:discv5,providers,manager,cache;warn:libp2p,multistream,switch,transport,tcptransport,semaphore,asyncstreamwrapper,lpstream,mplex,mplexchannel,noise,bufferstream,mplexcoder,secure,chronosstream,connection,connmanager,websock,ws-session,JSONRPC-CLIENT,JSONRPC-HTTP-CLIENT
-      - ARCHIVIST_API_BINDADDR=0.0.0.0
-      - ARCHIVIST_API_CORS_ORIGIN=*
-      - ARCHIVIST_STORAGE_QUOTA=20gb
-      - NAT_PUBLIC_IP_AUTO=https://ip.archivist.storage
-      - ARCHIVIST_ETH_PROVIDER=https://rpc.devnet.archivist.storage
-      - MARKETPLACE_ADDRESS_FROM_URL=https://config.archivist.storage/devnet/marketplace
-      - ARCHIVIST_API_PORT=8081
-      - ARCHIVIST_LISTEN_ADDRS=/ip4/0.0.0.0/tcp/8071
-      - ARCHIVIST_DISC_PORT=8091
-      # Address: 0x9bc1b45de7a67a064932a4f18a415d0adce4ca56
-      - ETH_PRIVATE_KEY=0x7c8ebb5a5c63ba549f7ea44d0f763f37642727ac0d772b8c783ac03ba82b6ea6
-    ports:
-      - 8081:8081/tcp
-      - 8071:8071/tcp
-      - 8091:8091/udp
-
-  archivist-2:
-    container_name: archivist-2
+  archivist1:
     image: durabilitylabs/archivist-node:sha-80ebcd7-dist-tests
     command:
       - archivist
@@ -68,5 +41,28 @@ services:
       - 8072:8072/tcp
       - 8092:8092/udp
 
-    
+  archivist2:
+    image: durabilitylabs/archivist-node:sha-80ebcd7-dist-tests
+    command:
+      - archivist
+      - persistence
+    environment:
+      - NETWORK=devnet
+      - ARCHIVIST_DATA_DIR=/data
+      - ARCHIVIST_LOG_LEVEL=TRACE;warn:discv5,providers,manager,cache;warn:libp2p,multistream,switch,transport,tcptransport,semaphore,asyncstreamwrapper,lpstream,mplex,mplexchannel,noise,bufferstream,mplexcoder,secure,chronosstream,connection,connmanager,websock,ws-session,JSONRPC-CLIENT,JSONRPC-HTTP-CLIENT
+      - ARCHIVIST_API_BINDADDR=0.0.0.0
+      - ARCHIVIST_API_CORS_ORIGIN=*
+      - ARCHIVIST_STORAGE_QUOTA=20gb
+      - NAT_PUBLIC_IP_AUTO=https://ip.archivist.storage
+      - ARCHIVIST_ETH_PROVIDER=https://rpc.devnet.archivist.storage
+      - MARKETPLACE_ADDRESS_FROM_URL=https://config.archivist.storage/devnet/marketplace
+      - ARCHIVIST_API_PORT=8083
+      - ARCHIVIST_LISTEN_ADDRS=/ip4/0.0.0.0/tcp/8073
+      - ARCHIVIST_DISC_PORT=8093
+      # Address: 0x9bc1b45de7a67a064932a4f18a415d0adce4ca56
+      - ETH_PRIVATE_KEY=0x7c8ebb5a5c63ba549f7ea44d0f763f37642727ac0d772b8c783ac03ba82b6ea6
+    ports:
+      - 8083:8083/tcp
+      - 8073:8073/tcp
+      - 8093:8093/udp
 
