@@ -5,3 +5,5 @@ ReactApp1.Server/obj
 server/bin
 server/obj
 client/obj
+ArchivistClient/obj
+ArchivistClient/bin

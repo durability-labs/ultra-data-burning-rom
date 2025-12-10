@@ -64,10 +64,14 @@
             var user = userService.GetUser(username);
             var mount = mountService.Get(user.BucketMountId);
 
-            TODO: mount service: is this filename allows? will it clash with our zip or json?
-            then return empty
+            var path = Path.Combine(mount.Path, filename);
+            var pathInvariant = path.ToLowerInvariant();
 
-            return Path.Combine(mount.Path, filename);
+            // We don't accept this if it would clash with one of our system files.
+            // (invariance important for filesystems that don't distinguish.)
+            if (pathInvariant == mount.GetInfoJsonFilePath().ToLowerInvariant()) return string.Empty;
+            if (pathInvariant == mount.GetZipFilePath().ToLowerInvariant()) return string.Empty;
+            return path;
         }
 
         public void Refresh(string username)

@@ -1,5 +1,6 @@
 <Solution>
-  <Project Path="client/UltraDataBurningROM.client.esproj" DisplayName="ultradataburningrom.client">
+  <Project Path="ArchivistClient/ArchivistClient.csproj" Id="9e8d44fa-f154-4beb-b34b-bdb3a1a14d72" />
+  <Project Path="client/UltraDataBurningROM.client.esproj">
     <Build />
     <Deploy />
   </Project>
