@@ -94,11 +94,4 @@ namespace UltraDataBurningROM.Server.Controllers
         public long MountExpiryUtc { get; set; } = 0;
         public long StorageExpiryUtc { get; set; } = 0;
     }
-
-    [Serializable]
-    public class BurnInfo
-    {
-        public RomInfo Fields { get; set; } = new RomInfo();
-        public ulong DurabilityOptionId { get; set; }
-    }
 }

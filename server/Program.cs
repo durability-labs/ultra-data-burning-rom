@@ -1,21 +1,26 @@
+using UltraDataBurningROM.Server;
 using UltraDataBurningROM.Server.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Initialize the storage immediately.
+var storageService = new StorageService();
+storageService.Initialize();
+
 // We use the configured volume size as the max request size.
-var envVar = Environment.GetEnvironmentVariable("BROM_ROMVOLUMESIZE");
-if (string.IsNullOrEmpty(envVar)) throw new Exception("Missing environment variable: BROM_ROMVOLUMESIZE");
-long maxRequestBodySize = Convert.ToInt64(envVar);
+long maxRequestBodySize = Convert.ToInt64(EnvConfig.VolumeSize);
 builder.WebHost.ConfigureKestrel(options => { options.Limits.MaxRequestBodySize = maxRequestBodySize; });
 
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
+builder.Services.AddSingleton<IStorageService>(storageService);
 builder.Services.AddSingleton<IDatabaseService, DatabaseService>();
 builder.Services.AddSingleton<IBucketService, BucketService>();
 builder.Services.AddSingleton<IMountService, MountService>();
 builder.Services.AddSingleton<IUserService, UserService>();
+builder.Services.AddSingleton<IBurnService, BurnService>();
 
 var app = builder.Build();
 

@@ -6,10 +6,11 @@ import BurnButton from './BurnButton';
 const bucketStates = {
   0: 'Unknown',
   1: 'Open',
-  2: 'Compressing',
-  3: 'Uploading',
-  4: 'Purchasing',
-  5: 'Done'
+  2: 'Starting',
+  3: 'Compressing',
+  4: 'Uploading',
+  5: 'Purchasing',
+  6: 'Done'
 }
 
 export default function UploadBusy(username, setActiveTab, setRomCid, bucket) {

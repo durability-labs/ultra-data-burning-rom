@@ -4,22 +4,17 @@
     {
         bool IsValid(string username);
         DbUser GetUser(string username);
+        void SaveUser(DbUser user);
     }
 
     public class UserService : IUserService
     {
-        private readonly string[] knownUsers = Array.Empty<string>();
+        private readonly string[] knownUsers = EnvConfig.KnownUsers;
         private readonly IDatabaseService databaseService;
         private readonly IMountService mountService;
 
         public UserService(IDatabaseService databaseService, IMountService mountService)
         {
-            var envVar = Environment.GetEnvironmentVariable("BROM_USERNAMES");
-            if (!string.IsNullOrEmpty(envVar))
-            {
-                knownUsers = envVar.Split(";", StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
-            }
-
             this.databaseService = databaseService;
             this.mountService = mountService;
         }
@@ -39,11 +34,16 @@
                     Id = username,
                     Username = username,
                     BucketMountId = mountService.CreateNewBucketMount().Id,
-                    BucketBurnState = 0,
+                    BucketBurnState = BucketBurnState.Open,
                 };
                 databaseService.Save(user);
             }
             return user;
+        }
+
+        public void SaveUser(DbUser user)
+        {
+            databaseService.Save(user);
         }
     }
 }

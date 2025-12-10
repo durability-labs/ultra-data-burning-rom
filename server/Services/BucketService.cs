@@ -4,26 +4,25 @@
     {
         Bucket GetBucket(string username);
         void DeleteFile(string username, string filename);
+        bool IsBucketOpen(string username);
         string GetWriteableBucketFilePath(string username, string filename);
         void Refresh(string username);
+        void StartBurn(string username, BurnInfo burnInfo);
+        void ClearNewRomCid(string username);
     }
 
     public class BucketService : IBucketService
     {
-        private readonly ulong volumeSize;
-        private readonly IDatabaseService dbService;
+        private readonly ulong volumeSize = EnvConfig.VolumeSize;
         private readonly IUserService userService;
         private readonly IMountService mountService;
+        private readonly IBurnService burnService;
 
-        public BucketService(IDatabaseService dbService, IUserService userService, IMountService mountService)
+        public BucketService(IUserService userService, IMountService mountService, IBurnService burnService)
         {
-            var envVar = Environment.GetEnvironmentVariable("BROM_ROMVOLUMESIZE");
-            if (string.IsNullOrEmpty(envVar)) throw new Exception("Missing environment variable: BROM_ROMVOLUMESIZE");
-            Console.WriteLine("env: " + envVar);
-            volumeSize = Convert.ToUInt64(envVar);
-            this.dbService = dbService;
             this.userService = userService;
             this.mountService = mountService;
+            this.burnService = burnService;
         }
 
         public Bucket GetBucket(string username)
@@ -41,7 +40,7 @@
                 VolumeSize = volumeSize,
                 State = user.BucketBurnState,
                 ExpiryUtc = expiry,
-                RomCid = string.Empty, // todo: user.bucket burn state = burn finished? set romcid!
+                RomCid = user.BucketNewRomCid
             };
         }
 
@@ -52,11 +51,22 @@
             mountService.DeleteFile(user.BucketMountId, filename);
         }
 
+        public bool IsBucketOpen(string username)
+        {
+            if (!userService.IsValid(username)) return false;
+            var user = userService.GetUser(username);
+            return user.BucketBurnState == BucketBurnState.Open;
+        }
+
         public string GetWriteableBucketFilePath(string username, string filename)
         {
             if (!userService.IsValid(username)) return string.Empty;
             var user = userService.GetUser(username);
             var mount = mountService.Get(user.BucketMountId);
+
+            TODO: mount service: is this filename allows? will it clash with our zip or json?
+            then return empty
+
             return Path.Combine(mount.Path, filename);
         }
 
@@ -67,6 +77,30 @@
             mountService.ClearCache(user.BucketMountId);
         }
 
+        public void StartBurn(string username, BurnInfo burnInfo)
+        {
+            if (!userService.IsValid(username)) return;
+            burnService.StartBurn(username, burnInfo);
+        }
+
+        public void ClearNewRomCid(string username)
+        {
+            if (!userService.IsValid(username)) return;
+            var user = userService.GetUser(username);
+            if (user.BucketBurnState == BucketBurnState.Done)
+            {
+                // When the burn-state is set to Done, the BurnService
+                // will immediately associate a new mount as bucketmount to this user.
+                // Turning the old one into a normal open mount.
+                // All we have to do here is clear the burn state from done back to open,
+                // and clear the new romCid, so we're back in the original state:
+                // An empty bucket-mount that is in state 'Open'.
+                user.BucketBurnState = BucketBurnState.Open;
+                user.BucketNewRomCid = string.Empty;
+                userService.SaveUser(user);
+            }
+        }
+
         private long GetExpiryUnixTimestamp(FileEntry[] entries, DbMount mount)
         {
             if (entries.Length == 0) return 0; // Empty buckets do not expire.
@@ -74,6 +108,7 @@
         }
     }
 
+    [Serializable]
     public class Bucket
     {
         public FileEntry[] Entries { get; set; } = Array.Empty<FileEntry>();
@@ -81,5 +116,12 @@
         public BucketBurnState State { get; set; } = BucketBurnState.Unknown;
         public long ExpiryUtc { get; set; } = 0;
         public string RomCid { get; set; } = string.Empty;
+    }
+    
+    [Serializable]
+    public class BurnInfo
+    {
+        public RomInfo Fields { get; set; } = new RomInfo();
+        public ulong DurabilityOptionId { get; set; }
     }
 }

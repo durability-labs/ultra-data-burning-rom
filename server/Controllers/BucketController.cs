@@ -51,10 +51,19 @@ namespace UltraDataBurningROM.Server.Controllers
                 return BadRequest("Missing boundary in multipart form data.");
             }
 
-            var cancellationToken = HttpContext.RequestAborted;
-            await SaveViaMultipartReaderAsync(username, boundary, Request.Body, cancellationToken);
+            // We can only do this if the bucket is open.
+            if (!bucketService.IsBucketOpen(username))
+            {
+                return BadRequest("Bucket is not open.");
+            }
 
-            Console.WriteLine("refreshing");
+            var cancellationToken = HttpContext.RequestAborted;
+            var result = await SaveViaMultipartReaderAsync(username, boundary, Request.Body, cancellationToken);
+            if (string.IsNullOrEmpty(result))
+            {
+                return BadRequest("Bucket rejected the file-write");
+            }
+
             bucketService.Refresh(username);
             return Ok();
         }
@@ -62,35 +71,14 @@ namespace UltraDataBurningROM.Server.Controllers
         [HttpPost("{username}/burnrom")]
         public async Task<IActionResult> BurnRom(string username, [FromBody] BurnInfo burnInfo)
         {
-            var romInfo = burnInfo.Fields;
-            Console.WriteLine("durabilityId: " + burnInfo.DurabilityOptionId);
-            Console.WriteLine("rominfo: " + romInfo.Title);
-            Console.WriteLine("rominfo: " + romInfo.Author);
-            Console.WriteLine("rominfo: " + romInfo.Tags);
-            Console.WriteLine("rominfo: " + romInfo.Description);
-
-            var _ = Task.Run(() =>
-            {
-                while (Get(username).State != BucketBurnState.Done)
-                {
-                    bucketService.NextState(username);
-
-                    Thread.Sleep(TimeSpan.FromSeconds(3));
-                }
-                //bucket.RomCid = "romCIDhere";
-            });
-            Console.WriteLine("Burn!");
+            bucketService.StartBurn(username, burnInfo);
             return Ok();
         }
 
         [HttpPost("{username}/clear")]
         public async Task<IActionResult> Clear(string username)
         {
-            //if (bucket.State == 5)
-            //{
-            //    bucket.RomCid = string.Empty;
-            //    bucket.State = 0;
-            //}
+            bucketService.ClearNewRomCid(username);
             return Ok();
         }
 
@@ -115,6 +103,11 @@ namespace UltraDataBurningROM.Server.Controllers
                         var filename = contentDisposition.FileName.Value;
                         if (string.IsNullOrEmpty(filename)) throw new Exception("No filename provided");
                         var fullPath = bucketService.GetWriteableBucketFilePath(username, filename);
+                        if (string.IsNullOrEmpty(fullPath))
+                        {
+                            Console.WriteLine("Write rejected by bucketService");
+                            return string.Empty;
+                        }
 
                         using FileStream outputFileStream = new FileStream(
                             path: fullPath,
