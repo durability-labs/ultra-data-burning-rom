@@ -84,23 +84,40 @@ namespace ArchivistClient
                 });
 
                 purchaseTask.Wait();
-                Log("Purchase successful: " + purchaseTask.Result);
+                Log("Purchase created: " + purchaseTask.Result);
                 return purchaseTask.Result;
             }
         }
 
-        public bool IsPurchaseStarted(string purchaseId)
+        public bool WaitForPurchaseStarted(string purchaseId, TimeSpan expiry)
+        {
+            Log("Waiting for purchase to start...");
+            var timeout = DateTime.UtcNow + expiry + TimeSpan.FromSeconds(10);
+            while (DateTime.UtcNow < timeout)
+            {
+                var state = GetPurchaseState(purchaseId);
+                if (state == PurchaseState.Started)
+                {
+                    Log("Purchase started.");
+                    return true;
+                }
+                if (state == PurchaseState.Errored) return false;
+                if (state == PurchaseState.Cancelled) return false;
+                if (state == PurchaseState.Failed) return false;
+                if (state == PurchaseState.Finished) throw new Exception("Purchase jumped to Finished state without being Started.");
+
+                Thread.Sleep(TimeSpan.FromSeconds(10));
+            }
+            return false;
+        }
+
+        private PurchaseState GetPurchaseState(string purchaseId)
         {
             lock (_lock)
             {
                 var task = node.GetPurchaseAsync(purchaseId);
                 task.Wait();
-                if (task.Result.State == PurchaseState.Started)
-                {
-                    Log("Purchase started.");
-                    return true;
-                }
-                return false;
+                return task.Result.State;
             }
         }
 

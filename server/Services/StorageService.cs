@@ -186,9 +186,9 @@ namespace UltraDataBurningROM.Server.Services
                 selected.ProofProbability
             );
 
-            while (!instance.IsPurchaseStarted(purchaseId))
+            if (!instance.WaitForPurchaseStarted(purchaseId, selected.Expiry))
             {
-                Thread.Sleep(TimeSpan.FromSeconds(1));
+                throw new Exception("Failed to start purchase");
             }
             var startUtc = DateTime.UtcNow - TimeSpan.FromSeconds(30.0);
             var purchaseCid = instance.GetPurchaseCid(purchaseId);
