@@ -78,7 +78,7 @@
     {
         public FileEntry[] Entries { get; set; } = Array.Empty<FileEntry>();
         public ulong VolumeSize { get; set; } = 0;
-        public int State { get; set; } = 0;
+        public BucketBurnState State { get; set; } = BucketBurnState.Unknown;
         public long ExpiryUtc { get; set; } = 0;
         public string RomCid { get; set; } = string.Empty;
     }

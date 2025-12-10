@@ -51,18 +51,6 @@ namespace UltraDataBurningROM.Server.Controllers
                 return BadRequest("Missing boundary in multipart form data.");
             }
 
-            //var filename = file.FileName;
-            //Console.WriteLine("receiving file: " + filename);
-
-            //var fullPath = bucketService.GetWriteableBucketFilePath(username, filename);
-            //Console.WriteLine("fullPath: " + fullPath);
-            //if (System.IO.File.Exists(fullPath)) return BadRequest("Already exists");
-
-            //using (var stream = System.IO.File.Create(fullPath))
-            //{
-            //    await file.CopyToAsync(stream);
-            //}
-
             var cancellationToken = HttpContext.RequestAborted;
             await SaveViaMultipartReaderAsync(username, boundary, Request.Body, cancellationToken);
 
@@ -81,16 +69,16 @@ namespace UltraDataBurningROM.Server.Controllers
             Console.WriteLine("rominfo: " + romInfo.Tags);
             Console.WriteLine("rominfo: " + romInfo.Description);
 
-            //var _ = Task.Run(() =>
-            //{
-            //    while (bucket.State < 5)
-            //    {
-            //        bucket.State++;
-            //        Thread.Sleep(TimeSpan.FromSeconds(1));
-            //    }
-            //    bucket.State = 5;
-            //    bucket.RomCid = "romCIDhere";
-            //});
+            var _ = Task.Run(() =>
+            {
+                while (Get(username).State != BucketBurnState.Done)
+                {
+                    bucketService.NextState(username);
+
+                    Thread.Sleep(TimeSpan.FromSeconds(3));
+                }
+                //bucket.RomCid = "romCIDhere";
+            });
             Console.WriteLine("Burn!");
             return Ok();
         }
@@ -111,9 +99,6 @@ namespace UltraDataBurningROM.Server.Controllers
 
         public async Task<string> SaveViaMultipartReaderAsync(string username, string boundary, Stream contentStream, CancellationToken cancellationToken)
         {
-            //string targetFilePath = Path.Combine(Directory.GetCurrentDirectory(), UploadFilePath);
-            //CheckAndRemoveLocalFile(targetFilePath);
-
             var reader = new MultipartReader(boundary, contentStream);
             MultipartSection? section;
             long totalBytesRead = 0;
@@ -150,7 +135,6 @@ namespace UltraDataBurningROM.Server.Controllers
                         string key = contentDisposition.Name.Value!;
                         using var streamReader = new StreamReader(section.Body);
                         string value = await streamReader.ReadToEndAsync(cancellationToken);
-                        //_logger.LogInformation($"Received metadata: {key} = {value}");
                     }
                 }
             }

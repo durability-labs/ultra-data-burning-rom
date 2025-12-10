@@ -96,7 +96,18 @@ namespace UltraDataBurningROM.Server.Services
     {
         public string Username { get; set; } = string.Empty;
         public string BucketMountId { get; set; } = string.Empty;
-        public int BucketBurnState { get; set; } = 0;
+        public BucketBurnState BucketBurnState { get; set; } = BucketBurnState.Unknown;
+    }
+
+    [Serializable]
+    public enum BucketBurnState
+    {
+        Unknown,
+        Open,
+        Compressing,
+        Uploading,
+        Purchasing,
+        Done
     }
 
     [Serializable]

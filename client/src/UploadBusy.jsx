@@ -3,6 +3,15 @@ import UploadButton from './UploadButton';
 import { useAppContext } from './AppContext';
 import BurnButton from './BurnButton';
 
+const bucketStates = {
+  0: 'Unknown',
+  1: 'Open',
+  2: 'Compressing',
+  3: 'Uploading',
+  4: 'Purchasing',
+  5: 'Done'
+}
+
 export default function UploadBusy(username, setActiveTab, setRomCid, bucket) {
   async function handleOpen(bucket) {
     if (!username) return;
@@ -21,7 +30,7 @@ export default function UploadBusy(username, setActiveTab, setRomCid, bucket) {
   return (
     <>
       <div style={{ border: '2px solid #1976d2', borderRadius: '8px', padding: '1rem', background: '#181818ff', maxWidth: '600px', margin: '0 auto' }}>
-        Busy... {bucket.state}
+        Busy... {bucketStates[bucket.state]}
       </div>
       {(bucket.romCid &&
         <div style={{ border: '2px solid #6bb1f7ff', borderRadius: '8px', padding: '1rem', background: '#181818ff', margin: '1rem' }}>
