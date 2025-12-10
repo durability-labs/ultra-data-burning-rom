@@ -85,7 +85,7 @@ namespace UltraDataBurningROM.Server.Controllers
         //private const string UploadFilePath = "uploadedfile.bin";
         private const int BufferSize = 1024 * 1024;
 
-        public async Task<string> SaveViaMultipartReaderAsync(string username, string boundary, Stream contentStream, CancellationToken cancellationToken)
+        private async Task<string> SaveViaMultipartReaderAsync(string username, string boundary, Stream contentStream, CancellationToken cancellationToken)
         {
             var reader = new MultipartReader(boundary, contentStream);
             MultipartSection? section;

@@ -113,11 +113,15 @@ namespace UltraDataBurningROM.Server.Services
             {
                 lock (_nodesLock)
                 {
-                    foreach (var n in nodes)
+                    var all = nodes.ToArray();
+                    foreach (var n in all)
                     {
                         if (!n.InUse)
                         {
                             n.InUse = true;
+                            // Move to the back of the list.
+                            nodes.Remove(n);
+                            nodes.Add(n);
                             return n;
                         }
                     }

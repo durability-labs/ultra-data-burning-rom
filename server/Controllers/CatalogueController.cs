@@ -102,12 +102,6 @@ namespace UltraDataBurningROM.Server.Controllers
         }
     }
 
-    public class PopularInfo
-    {
-        public Rom[] Roms { get; set; } = Array.Empty<Rom>();
-        public string[] Tags { get; set; } = Array.Empty<string>();
-    }
-
     public class SearchResult
     {
         public Rom[] Roms { get; set; } = Array.Empty<Rom>();

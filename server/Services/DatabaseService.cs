@@ -20,11 +20,11 @@ namespace UltraDataBurningROM.Server.Services
             CreateDirectory(Path.Combine(rootPath, typeof(DbUser).Name.ToLowerInvariant()));
             CreateDirectory(Path.Combine(rootPath, typeof(DbMount).Name.ToLowerInvariant()));
             CreateDirectory(Path.Combine(rootPath, typeof(DbRom).Name.ToLowerInvariant()));
+            CreateDirectory(Path.Combine(rootPath, typeof(DbPopContent).Name.ToLowerInvariant()));
         }
 
         private void CreateDirectory(string rootPath)
         {
-            Console.WriteLine("createdir: " + rootPath);
             Directory.CreateDirectory(rootPath);
         }
 
@@ -155,5 +155,12 @@ namespace UltraDataBurningROM.Server.Services
     {
         public string Filename { get; set; } = string.Empty;
         public ulong ByteSize { get; set; } = 0;
+    }
+
+    [Serializable]
+    public class DbPopContent : DbEntity
+    {
+        public string[] RomCids { get; set; } = Array.Empty<string>();
+        public string[] Tags { get; set; } = Array.Empty<string>();
     }
 }

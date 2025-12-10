@@ -3,6 +3,13 @@ import { useAppContext } from './AppContext';
 import DurabilityOptions from './DurabilityOptions';
 import formatBytes from './format';
 
+// Mount state:
+// 0: Unknown,
+// 1: Bucket,
+// 2: Downloading,
+// 3: OpenInUse,
+// 4: ClosedNotUsed
+
 const defaultRom = {
     romCid: "",
     mountState: 0,
@@ -199,7 +206,7 @@ export default function Download() {
                 <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <span>{formatBytes(file.byteSize)}</span>
-                    {rom.mountState === 2 && (
+                    {rom.mountState === 3 && (
                       <button
                         onClick={() => handleDownload(file, idx)}
                         title="Download"
@@ -225,7 +232,7 @@ export default function Download() {
           </tbody>
         </table>
       </div>
-      {(rom.mountState === 2) && 
+      {(rom.mountState === 3) && 
       <>
         <div style={{ maxWidth: '600px', margin: '1.5rem auto 1.5rem auto', textAlign: 'center' }}>
           <button
@@ -263,7 +270,7 @@ export default function Download() {
       </>
       }
       {
-        (rom.mountState === 0) &&
+        (rom.mountState === 1) &&
         <>
           <div style={{ maxWidth: '600px', margin: '1.5rem auto 1.5rem auto', textAlign: 'center' }}>
             <button
@@ -283,7 +290,7 @@ export default function Download() {
         </>
       }
       {
-        (rom.mountState === 1) &&
+        (rom.mountState === 2) &&
         <>
           <div style={{ maxWidth: '600px', margin: '1.5rem auto 1.5rem auto', textAlign: 'center' }}>
             Spinning it up... Stand by...

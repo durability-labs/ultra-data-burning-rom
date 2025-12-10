@@ -88,7 +88,7 @@ namespace UltraDataBurningROM.Server.Controllers
     public class Rom
     {
         public string RomCid { get; set; } = string.Empty;
-        public int MountState { get; set; } = 0;
+        public MountState MountState { get; set; } = MountState.Unknown;
         public RomInfo Info { get; set; } = new RomInfo();
         public FileEntry[] Entries { get; set; } = Array.Empty<FileEntry>();
         public long MountExpiryUtc { get; set; } = 0;
