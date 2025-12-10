@@ -94,9 +94,9 @@ namespace UltraDataBurningROM.Server.Services
         private readonly IStorageService storageService;
         private readonly DbUser user;
         private readonly BurnInfo burnInfo;
-        private readonly DbMount bucketMount;
+        private DbMount bucketMount;
         private string uploadCid = string.Empty;
-        private string purchaseCid = string.Empty;
+        private PurchaseResponse purchase = new PurchaseResponse();
 
         public WorkerRun(IDatabaseService dbService, IMountService mountService, IStorageService storageService, DbUser user, BurnInfo burnInfo)
         {
@@ -108,17 +108,6 @@ namespace UltraDataBurningROM.Server.Services
 
             bucketMount = mountService.Get(user.BucketMountId);
         }
-
-        //Unknown,
-        //Open,
-        //Starting: write info to file in mount
-        //Compressing: create zip
-        //Uploading: upload zip to a node, get cid
-        //Purchasing: create purchase, wait for start, get cid
-        //              bucketmount becomes openInUse
-        //              new bucketmount for user
-        //              save new rom entry
-        //Done:     set new romcid
 
         public void RunWorker()
         {
@@ -133,27 +122,44 @@ namespace UltraDataBurningROM.Server.Services
 
             SetState(BucketBurnState.Purchasing);
             PurchaseStorage();
-            CreateNewUserBucketMount();
             SaveNewRom();
+            CreateNewUserBucketMount();
 
             SetState(BucketBurnState.Done);
         }
 
         private void SaveNewRom()
         {
-            // save rom db entry
-            // set new romcid on user.
+            var rom = new DbRom
+            {
+                RomCid = purchase.PurchaseCid,
+                Info = burnInfo.Fields,
+                Files = mountService.GetFileEntries(bucketMount.Id),
+                StorageExpireUtc = purchase.FinishUtc,
+                MountCounter = 1,
+                CurrentMountId = bucketMount.Id
+            };
+            dbService.Save(rom);
+
+            user.BucketNewRomCid = rom.RomCid;
+            dbService.Save(user);
         }
 
         private void CreateNewUserBucketMount()
         {
-            // bucketmount becomes open-in-use
-            // make new bucketmount for user
+            // Current bucketmount becomes open-in-use.
+            mountService.ConvertBucketMountToOpen(bucketMount.Id);
+
+            // Make a new open bucketmount for user.
+            bucketMount = mountService.CreateNewBucketMount();
+            user.BucketMountId = bucketMount.Id;
+            user.BucketBurnState = BucketBurnState.Open;
+            dbService.Save(user);
         }
 
         private void PurchaseStorage()
         {
-            throw new NotImplementedException();
+            purchase = storageService.PurchaseStorage(uploadCid, burnInfo.DurabilityOptionId);
         }
 
         private void UploadZipFile()

@@ -7,6 +7,7 @@
         FileEntry[] GetFileEntries(string mountId);
         void DeleteFile(string mountId, string filename);
         void ClearCache(string mountId);
+        void ConvertBucketMountToOpen(string mountId);
     }
 
     public class MountService : IMountService
@@ -87,6 +88,14 @@
         public void ClearCache(string mountId)
         {
             cache.ClearKey(mountId);
+        }
+
+        public void ConvertBucketMountToOpen(string mountId)
+        {
+            var mount = Get(mountId);
+            if (mount.State != MountState.Bucket) throw new Exception("Attempt to convert non-bucket mount.");
+            mount.State = MountState.OpenInUse;
+            dbService.Save(mount);
         }
     }
 }
