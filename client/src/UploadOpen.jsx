@@ -10,11 +10,15 @@ export default function UploadOpen(username, bucket, bytesUsed) {
     const confirmed = window.confirm(`Delete file "${file.filename}"?`);
     if (!confirmed) return;
     const filename = file.filename;
-    fetch(`/bucket/${username}/${filename}`, { method: 'DELETE' })
-      .then(res => {
-        updateBucket(username);
+    fetch(`/bucket/${username}`, 
+      {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          filename: filename
+        })
       })
-      .catch(() => window.alert('Failed to delete file.'));
+      .catch((e) => window.alert('Failed to delete file: ' + e.message));
   }
 
   return (bucket && (
@@ -74,9 +78,11 @@ export default function UploadOpen(username, bucket, bytesUsed) {
               transition: 'width 0.3s'
             }} />
           </div>
-          <div style={{ marginBottom: '0.5rem', color: '#fff', fontSize: '0.75rem' }}>
-            Burn ROM before: {new Date(bucket.expiryUtc).toLocaleString()}
-          </div>
+          {(bucket.expiryUtc > 0) &&
+            <div style={{ marginBottom: '0.5rem', color: '#fff', fontSize: '0.75rem' }}>
+              Burn ROM before: {new Date(bucket.expiryUtc).toLocaleString()}
+            </div>
+          }
         </div>
       </div>
       <div style={{ maxWidth: '600px', margin: '1.5rem auto 1.5rem auto', textAlign: 'center' }}>

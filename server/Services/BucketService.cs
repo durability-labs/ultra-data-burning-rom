@@ -32,12 +32,15 @@
             var user = userService.GetUser(username);
             var mount = mountService.Get(user.BucketMountId);
 
+            var entries = mountService.GetFileEntries(user.BucketMountId);
+            var expiry = GetExpiryUnixTimestamp(entries, mount);
+
             return new Bucket
             {
-                Entries = mountService.GetFileEntries(user.BucketMountId),
+                Entries = entries,
                 VolumeSize = volumeSize,
                 State = user.BucketBurnState,
-                ExpiryUtc = Utils.ToUnixTimestamp(mount.ExpiryUtc),
+                ExpiryUtc = expiry,
                 RomCid = string.Empty, // todo: user.bucket burn state = burn finished? set romcid!
             };
         }
@@ -62,6 +65,12 @@
             if (!userService.IsValid(username)) return;
             var user = userService.GetUser(username);
             mountService.ClearCache(user.BucketMountId);
+        }
+
+        private long GetExpiryUnixTimestamp(FileEntry[] entries, DbMount mount)
+        {
+            if (entries.Length == 0) return 0; // Empty buckets do not expire.
+            return Utils.ToUnixTimestamp(mount.ExpiryUtc);
         }
     }
 
