@@ -1,6 +1,4 @@
-﻿using UltraDataBurningROM.Server.Controllers;
-
-namespace UltraDataBurningROM.Server.Services
+﻿namespace UltraDataBurningROM.Server.Services
 {
     public interface IMapperService
     {
@@ -56,5 +54,15 @@ namespace UltraDataBurningROM.Server.Services
             if (mount == null) return 0;
             return Utils.ToUnixTimestamp(mount.ExpiryUtc);
         }
+    }
+
+    public class Rom
+    {
+        public string RomCid { get; set; } = string.Empty;
+        public MountState MountState { get; set; } = MountState.Unknown;
+        public RomInfo Info { get; set; } = new RomInfo();
+        public FileEntry[] Entries { get; set; } = Array.Empty<FileEntry>();
+        public long MountExpiryUtc { get; set; } = 0;
+        public long StorageExpiryUtc { get; set; } = 0;
     }
 }

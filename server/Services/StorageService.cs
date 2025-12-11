@@ -14,6 +14,7 @@ namespace UltraDataBurningROM.Server.Services
     {
         string Upload(string filepath);
         PurchaseResponse PurchaseStorage(string cid, ulong optionId);
+        void Download(string cid, string filepath);
     }
 
     public class StorageService : IStorageService

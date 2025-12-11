@@ -7,60 +7,42 @@ namespace UltraDataBurningROM.Server.Controllers
     [Route("rom")]
     public class RomController : ControllerBase
     {
-        private static readonly Rom rom = new Rom()
+        private readonly IUserService userService;
+        private readonly IMapperService mapperService;
+        private readonly IMountService mountService;
+
+        public RomController(IUserService userService, IMapperService mapperService, IMountService mountService)
         {
-            RomCid = "romcid1",
-            MountState = 0,
-            Info = new RomInfo()
-            {
-                Title = "title1",
-                Author = "author1",
-                Tags = "tags1",
-                Description = "description1"
-            },
-            Entries =
-            [
-                new FileEntry()
-                {
-                    ByteSize = 1234567,
-                    Filename = "file.bin"
-                }
-            ],
-            MountExpiryUtc = 0,
-            StorageExpiryUtc = new DateTimeOffset(DateTime.UtcNow.AddHours(3)).ToUnixTimeMilliseconds()
-        };
+            this.userService = userService;
+            this.mapperService = mapperService;
+            this.mountService = mountService;
+        }
 
         [HttpGet("{username}/{romcid}")]
         public async Task<IActionResult> Get(string username, string romcid)
         {
-            return Ok(rom);
+            if (!userService.IsValid(username)) return EmptyRom();
+            return Rom(romcid);
         }
 
         [HttpPost("{username}/{romcid}/mount")]
         public async Task<IActionResult> Mount(string username, string romcid)
         {
-            if (rom.MountState == MountState.ClosedNotUsed)
-            {
-                rom.MountState = MountState.Downloading;
-                rom.MountExpiryUtc = new DateTimeOffset(DateTime.UtcNow.AddHours(3)).ToUnixTimeMilliseconds();
-                var _ = Task.Run(() =>
-                {
-                    Thread.Sleep(TimeSpan.FromSeconds(10));
-                    rom.MountState = MountState.OpenInUse;
-                });
-            }
+            if (!userService.IsValid(username)) return EmptyRom();
 
-            return Ok(rom);
+            mountService.BeginMount(romcid);
+
+            return Rom(romcid);
         }
 
         [HttpPost("{username}/{romcid}/unmount")]
         public async Task<IActionResult> Unmount(string username, string romcid)
         {
-            if (rom.MountState == MountState.OpenInUse)
-            {
-                rom.MountState = MountState.ClosedNotUsed;
-            }
-            return Ok(rom);
+            if (!userService.IsValid(username)) return EmptyRom();
+
+            mountService.EndMount(romcid);
+
+            return Rom(romcid);
         }
 
         [HttpGet("{username}/{romcid}/file/{entryId}")]
@@ -83,15 +65,17 @@ namespace UltraDataBurningROM.Server.Controllers
             Console.WriteLine("extend with id " + durabilityOptionId);
             return Ok();
         }
-    }
 
-    public class Rom
-    {
-        public string RomCid { get; set; } = string.Empty;
-        public MountState MountState { get; set; } = MountState.Unknown;
-        public RomInfo Info { get; set; } = new RomInfo();
-        public FileEntry[] Entries { get; set; } = Array.Empty<FileEntry>();
-        public long MountExpiryUtc { get; set; } = 0;
-        public long StorageExpiryUtc { get; set; } = 0;
+        private IActionResult Rom(string romcid)
+        {
+            var rom = mapperService.Map(romcid);
+            if (rom == null) return EmptyRom();
+            return Ok(rom);
+        }
+
+        private IActionResult EmptyRom()
+        {
+            return Ok(new Rom());
+        }
     }
 }
