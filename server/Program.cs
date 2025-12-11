@@ -25,6 +25,8 @@ builder.Services.AddSingleton<IPopularContentService, PopularContentService>();
 builder.Services.AddSingleton<IWorkerService, WorkerService>();
 builder.Services.AddSingleton<ISearchService, SearchService>();
 builder.Services.AddSingleton<IMapperService, MapperService>();
+builder.Services.AddSingleton<ICleanupService, CleanupService>();
+builder.Services.AddSingleton<IDownloadService, DownloadService>();
 
 var app = builder.Build();
 
@@ -47,8 +49,10 @@ app.MapFallbackToFile("/index.html");
 
 var popularContentService = app.Services.GetService<IPopularContentService>()!;
 var searchService = app.Services.GetService<ISearchService>()!;
+var cleanupService = app.Services.GetService<ICleanupService>()!;
 popularContentService.Start();
 searchService.Start();
+cleanupService.Start();
 
 var workerService = app.Services.GetService<IWorkerService>()!;
 workerService.LateStart();

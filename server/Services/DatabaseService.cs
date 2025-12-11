@@ -7,6 +7,7 @@ namespace UltraDataBurningROM.Server.Services
         T? Get<T>(string id) where T : DbEntity;
         void Save<T>(T entity) where T : DbEntity;
         void Iterate<T>(Action<T> onEntity) where T : DbEntity;
+        void Delete<T>(string id) where T : DbEntity;
     }
 
     public class DatabaseService : IDatabaseService
@@ -91,6 +92,25 @@ namespace UltraDataBurningROM.Server.Services
             catch (Exception e)
             {
                 Console.WriteLine("Exception iterating types: " + e);
+            }
+        }
+
+        public void Delete<T>(string id) where T : DbEntity
+        {
+            lock (_lock)
+            {
+                var typename = typeof(T).Name.ToLowerInvariant();
+                var map = GetMap(typename);
+                map.ClearKey(id);
+
+                var filename = Path.Combine(rootPath, typename, id);
+                try
+                {
+                    if (File.Exists(filename)) File.Delete(filename);
+                }
+                catch
+                {
+                }
             }
         }
 

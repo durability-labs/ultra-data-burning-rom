@@ -213,6 +213,7 @@
                     // do not mountCounter++
                     // users can unmount/mount endlessly to screw with popularity numbers.
                     mount.State = MountState.OpenInUse;
+                    mount.ExpiryUtc = DateTime.UtcNow + TimeSpan.FromHours(3.0);
                     dbService.Save(mount);
                     break;
                 case MountState.Unknown:
