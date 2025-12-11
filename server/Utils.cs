@@ -7,6 +7,14 @@ namespace UltraDataBurningROM.Server
         {
             return new DateTimeOffset(utc).ToUnixTimeMilliseconds();
         }
+
+        public static string[] SplitTagString(string tags)
+        {
+            return tags
+                .Replace(",", " ")
+                .Replace(".", " ")
+                .Split(" ", StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+        }
     }
 
     public class CapMap<TKey, TValue> where TKey : notnull

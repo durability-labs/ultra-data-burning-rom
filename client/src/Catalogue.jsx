@@ -18,7 +18,14 @@ export default function Catalogue() {
   }, []);
 
   function setPopularRoms() {
-    setSearchResult(popularInfo);
+    fetch('/catalogue')
+      .then(res => res.json())
+      .then(data => {
+        setPopularInfo(data);
+        setSearchResult(popularInfo);
+      })
+      .catch(() => {
+      });
   }
 
   function runSearch(value) {

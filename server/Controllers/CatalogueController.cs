@@ -7,38 +7,10 @@ namespace UltraDataBurningROM.Server.Controllers
     [Route("catalogue")]
     public class CatalogueController : ControllerBase
     {
-        private static readonly PopularInfo popular = new PopularInfo
+        public CatalogueController(IPopularContentService popularContentService)
         {
-            Roms = [
-                new Rom
-                {
-                    RomCid = "pop1",
-                    Entries = [
-                        new FileEntry
-                        {
-                            Filename = "pop1file.txt",
-                            ByteSize = 123456,
-                        }
-                    ],
-                    MountExpiryUtc = new DateTimeOffset(DateTime.UtcNow.AddHours(3)).ToUnixTimeMilliseconds(),
-                    Info = new RomInfo
-                    {
-                        Title = "popular1",
-                        Author = "mr a",
-                        Description = "everyone likes this one",
-                        Tags = "popular"
-                    },
-                    MountState = 0
-                }
-            ],
-            Tags =
-            [
-                "tag1",
-                "tag2",
-                "tag3",
-                "tag4"
-            ]
-        };
+            this.popularContentService = popularContentService;
+        }
 
         private static readonly SearchResult searchResult = new SearchResult
         {
@@ -87,11 +59,12 @@ namespace UltraDataBurningROM.Server.Controllers
                 }
             ]
         };
+        private readonly IPopularContentService popularContentService;
 
         [HttpGet]
         public async Task<IActionResult> Get()
         {
-            return Ok(popular);
+            return Ok(popularContentService.GetPopularInfo());
         }
 
         [HttpPost("search/{query}")]

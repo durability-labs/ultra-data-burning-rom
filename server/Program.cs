@@ -21,6 +21,7 @@ builder.Services.AddSingleton<IBucketService, BucketService>();
 builder.Services.AddSingleton<IMountService, MountService>();
 builder.Services.AddSingleton<IUserService, UserService>();
 builder.Services.AddSingleton<IBurnService, BurnService>();
+builder.Services.AddSingleton<IPopularContentService, PopularContentService>();
 
 var app = builder.Build();
 
@@ -41,4 +42,9 @@ app.MapControllers();
 
 app.MapFallbackToFile("/index.html");
 
+var popularContentService = app.Services.GetService<IPopularContentService>();
+popularContentService!.Start();
+
 app.Run();
+
+popularContentService!.Stop();

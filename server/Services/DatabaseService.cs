@@ -6,6 +6,7 @@ namespace UltraDataBurningROM.Server.Services
     {
         T? Get<T>(string id) where T : DbEntity;
         void Save<T>(T entity) where T : DbEntity;
+        void Iterate<T>(Action<T> onEntity) where T : DbEntity;
     }
 
     public class DatabaseService : IDatabaseService
@@ -23,11 +24,6 @@ namespace UltraDataBurningROM.Server.Services
             CreateDirectory(Path.Combine(rootPath, typeof(DbPopContent).Name.ToLowerInvariant()));
         }
 
-        private void CreateDirectory(string rootPath)
-        {
-            Directory.CreateDirectory(rootPath);
-        }
-
         public T? Get<T>(string id) where T : DbEntity
         {
             lock (_lock)
@@ -39,7 +35,9 @@ namespace UltraDataBurningROM.Server.Services
                 var filename = Path.Combine(rootPath, typename, id);
                 try
                 {
-                    return JsonConvert.DeserializeObject<T>(File.ReadAllText(filename));
+                    var entity = JsonConvert.DeserializeObject<T>(File.ReadAllText(filename));
+                    if (entity != null) AddUpdateCache(typename, id, entity);
+                    return entity;
                 }
                 catch
                 {
@@ -66,21 +64,77 @@ namespace UltraDataBurningROM.Server.Services
             }
         }
 
+        public void Iterate<T>(Action<T> onEntity) where T : DbEntity
+        {
+            // We don't lock while iterating. Instead, we take a snapshot of all the 
+            // known entries for this type. Then we try to read them from the cache
+            // if that fails we try to read them from the disk, and if that fails
+            // we ignore it.
+
+            try
+            {
+                var typename = typeof(T).Name.ToLowerInvariant();
+                var map = GetMap(typename);
+                var typeRoot = Path.Combine(rootPath, typename);
+                var files = Directory.GetFiles(typeRoot);
+                foreach (var filepath in files)
+                {
+                    try
+                    {
+                        PassEntity(filepath, map, onEntity);
+                    }
+                    catch
+                    {
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Exception iterating types: " + e);
+            }
+        }
+
+        private void PassEntity<T>(string filepath, CapMap<string, object> map, Action<T> onEntity) where T : DbEntity
+        {
+            var filename = Path.GetFileName(filepath);
+            if (map.TryGetValue(filename, out var entity))
+            {
+                if (entity is T fromCache)
+                {
+                    onEntity(fromCache);
+                    return;
+                }
+            }
+            var fromDisk = JsonConvert.DeserializeObject<T>(File.ReadAllText(filepath));
+            if (fromDisk != null)
+            {
+                onEntity(fromDisk);
+            }
+        }
+
+        private void CreateDirectory(string rootPath)
+        {
+            Directory.CreateDirectory(rootPath);
+        }
+
         private void AddUpdateCache<T>(string typename, string id, T entity) where T : DbEntity
         {
-            if (!cache.ContainsKey(typename)) cache.Add(typename, new CapMap<string, object>());
-            var map = cache.Get(typename);
+            var map = GetMap(typename);
             map.Set(id, entity);
+        }
+
+        private CapMap<string, object> GetMap(string typename)
+        {
+            if (!cache.ContainsKey(typename)) cache.Add(typename, new CapMap<string, object>());
+            return cache.Get(typename);
         }
 
         private T? GetFromCache<T>(string typename, string id) where T : DbEntity
         {
-            if (cache.TryGetValue(typename, out CapMap<string, object>? map))
+            var map = GetMap(typename);
+            if (map.TryGetValue(id, out object? obj))
             {
-                if (map != null && map.TryGetValue(id, out object? obj))
-                {
-                    return (T?)obj;
-                }
+                return (T?)obj;
             }
             return null;
         }

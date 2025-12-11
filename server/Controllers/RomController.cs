@@ -39,14 +39,14 @@ namespace UltraDataBurningROM.Server.Controllers
         [HttpPost("{username}/{romcid}/mount")]
         public async Task<IActionResult> Mount(string username, string romcid)
         {
-            if (rom.MountState == 0)
+            if (rom.MountState == MountState.ClosedNotUsed)
             {
-                rom.MountState = 1;
+                rom.MountState = MountState.Downloading;
                 rom.MountExpiryUtc = new DateTimeOffset(DateTime.UtcNow.AddHours(3)).ToUnixTimeMilliseconds();
                 var _ = Task.Run(() =>
                 {
                     Thread.Sleep(TimeSpan.FromSeconds(10));
-                    rom.MountState = 2;
+                    rom.MountState = MountState.OpenInUse;
                 });
             }
 
@@ -56,9 +56,9 @@ namespace UltraDataBurningROM.Server.Controllers
         [HttpPost("{username}/{romcid}/unmount")]
         public async Task<IActionResult> Unmount(string username, string romcid)
         {
-            if (rom.MountState == 2)
+            if (rom.MountState == MountState.OpenInUse)
             {
-                rom.MountState = 0;
+                rom.MountState = MountState.ClosedNotUsed;
             }
             return Ok(rom);
         }
