@@ -11,7 +11,7 @@ namespace UltraDataBurningROM.Server.Services
 
     public class DatabaseService : IDatabaseService
     {
-        private readonly object _lock = new object();
+        private readonly Lock _lock = new Lock();
         private readonly string rootPath = "/database";
         private readonly CapMap<string, CapMap<string, object>> cache = new CapMap<string, CapMap<string, object>>();
 

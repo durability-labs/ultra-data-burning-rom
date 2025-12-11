@@ -68,7 +68,7 @@ namespace UltraDataBurningROM.Server.Services
 
         private readonly Durability durability;
         private readonly List<StorageNode> nodes = new List<StorageNode>();
-        private static readonly object _nodesLock = new object();
+        private static readonly Lock _nodesLock = new Lock();
 
         public StorageService()
         {

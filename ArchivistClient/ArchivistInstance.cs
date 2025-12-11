@@ -5,7 +5,7 @@ namespace ArchivistClient
     public class ArchivistInstance
     {
         private readonly ArchivistNode node;
-        private readonly object _lock = new object();
+        private readonly Lock _lock = new Lock();
 
         public ArchivistInstance(string url)
         {

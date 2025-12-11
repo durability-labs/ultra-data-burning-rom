@@ -13,7 +13,7 @@ namespace UltraDataBurningROM.Server.Services
         private readonly IDatabaseService dbService;
         private readonly IStorageService storageService;
         private readonly IMountService mountService;
-        private static readonly object _startBurnLock = new object();
+        private static readonly Lock _startBurnLock = new Lock();
 
         public BurnService(IDatabaseService dbService, IStorageService storageService, IMountService mountService)
         {

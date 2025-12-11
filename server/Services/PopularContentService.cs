@@ -6,28 +6,30 @@ namespace UltraDataBurningROM.Server.Services
     {
         void Start();
         PopularInfo GetPopularInfo();
-        void Stop();
     }
 
     public class PopularContentService : IPopularContentService
     {
-        private readonly TimeSpan UpdateFrequency = TimeSpan.FromMinutes(30.0);
-        private const string PopContentId = "popcontentid";
+        public const string PopContentId = "popcontentid";
         private readonly IDatabaseService databaseService;
-        private readonly CancellationTokenSource cts = new CancellationTokenSource();
-        private Task worker = Task.CompletedTask;
+        private readonly IWorkerService workerService;
+        private readonly IMapperService mapperService;
         private PopularInfo info = new PopularInfo();
 
-        public PopularContentService(IDatabaseService databaseService)
+        public PopularContentService(IDatabaseService databaseService, IWorkerService workerService, IMapperService mapperService)
         {
             this.databaseService = databaseService;
+            this.workerService = workerService;
+            this.mapperService = mapperService;
         }
 
         public void Start()
         {
             Log("Starting PopularContentService...");
-            worker = StartWorker();
-            Initialize();
+            
+            UpdateInfo(GetOrCreateDbEntry());
+
+            workerService.Attach(() => new PopularUpdateContext(OnResult));
         }
 
         public PopularInfo GetPopularInfo()
@@ -35,17 +37,10 @@ namespace UltraDataBurningROM.Server.Services
             return info;
         }
 
-        public void Stop()
+        private void OnResult(DbPopContent result)
         {
-            Log("Stopping PopularContentService...");
-            cts.Cancel();
-            worker.Wait();
-        }
-
-        private void Initialize()
-        {
-            var db = GetOrCreateDbEntry();
-            UpdateInfo(db);
+            databaseService.Save(result);
+            UpdateInfo(result);
         }
 
         private DbPopContent GetOrCreateDbEntry()
@@ -53,95 +48,19 @@ namespace UltraDataBurningROM.Server.Services
             var db = databaseService.Get<DbPopContent>(PopContentId);
             if (db == null)
             {
-                db = GenerateUpdate();
+                db = new DbPopContent();
                 databaseService.Save(db);
             }
             return db;
-        }
-
-        private Task StartWorker()
-        {
-            return Task.Run(() =>
-            {
-                try
-                {
-                    Worker();
-                }
-                catch (Exception ex)
-                {
-                    Log("Exception in PopularContentService worker: " + ex);
-                }
-            });
-        }
-
-        private void Worker()
-        {
-            while (!cts.IsCancellationRequested)
-            {
-                if (!cts.Token.WaitHandle.WaitOne(UpdateFrequency))
-                {
-                    var db = GenerateUpdate();
-                    databaseService.Save(db);
-                    UpdateInfo(db);
-                }
-            }
         }
 
         private void UpdateInfo(DbPopContent db)
         {
             info = new PopularInfo
             {
-                Roms = Map(db.RomCids),
+                Roms = mapperService.Map(db.RomCids),
                 Tags = db.Tags
             };
-        }
-
-        private DbPopContent GenerateUpdate()
-        {
-            Log("Updating popular content...");
-            var context = new PopularUpdateContext();
-            databaseService.Iterate<DbRom>(context.ProcessRom);
-            return context.GetResult();
-        }
-
-        private Rom[] Map(string[] romCids)
-        {
-            return romCids.Select(Map).Where(r => r != null).Cast<Rom>().ToArray();
-        }
-
-        private Rom? Map(string romCid)
-        {
-            var dbRom = databaseService.Get<DbRom>(romCid);
-            if (dbRom == null) return null;
-
-            var mountState = GetMountState(dbRom);
-            var mountExpiry = GetMountExpiry(dbRom);
-
-            return new Rom
-            {
-                RomCid = romCid,
-                Info = dbRom.Info,
-                Entries = dbRom.Files,
-                MountExpiryUtc = mountExpiry,
-                MountState = mountState,
-                StorageExpiryUtc = Utils.ToUnixTimestamp(dbRom.StorageExpireUtc)
-            };
-        }
-
-        private MountState GetMountState(DbRom dbRom)
-        {
-            if (string.IsNullOrEmpty(dbRom.CurrentMountId)) return MountState.ClosedNotUsed;
-            var mount = databaseService.Get<DbMount>(dbRom.CurrentMountId);
-            if (mount == null) return MountState.ClosedNotUsed;
-            return mount.State;
-        }
-
-        private long GetMountExpiry(DbRom dbRom)
-        {
-            if (string.IsNullOrEmpty(dbRom.CurrentMountId)) return 0;
-            var mount = databaseService.Get<DbMount>(dbRom.CurrentMountId);
-            if (mount == null) return 0;
-            return Utils.ToUnixTimestamp(mount.ExpiryUtc);
         }
 
         private void Log(string msg)
@@ -156,15 +75,25 @@ namespace UltraDataBurningROM.Server.Services
         public string[] Tags { get; set; } = Array.Empty<string>();
     }
 
-    public class PopularUpdateContext
+    public class PopularUpdateContext : IWorkHandler<DbRom>
     {
         private const int MaxPopularRoms = 7;
         private const int MaxTags = 7;
         private readonly List<DbRom> selected = new List<DbRom>();
         private readonly Dictionary<string, int> tagCounts = new Dictionary<string, int>();
         private int lowest = 0;
+        private Action<DbPopContent> onResult;
 
-        public void ProcessRom(DbRom dbRom)
+        public PopularUpdateContext(Action<DbPopContent> onResult)
+        {
+            this.onResult = onResult;
+        }
+
+        public void Initialize()
+        {
+        }
+
+        public void OnEntity(DbRom dbRom)
         {
             ProcessTags(dbRom);
             if (selected.Count < MaxPopularRoms)
@@ -180,13 +109,14 @@ namespace UltraDataBurningROM.Server.Services
             }
         }
 
-        public DbPopContent GetResult()
+        public void Finish()
         {
-            return new DbPopContent
+            onResult(new DbPopContent
             {
+                Id = PopularContentService.PopContentId,
                 RomCids = selected.Select(r => r.RomCid).ToArray(),
                 Tags = GetTags()
-            };
+            });
         }
 
         private void ProcessTags(DbRom dbRom)

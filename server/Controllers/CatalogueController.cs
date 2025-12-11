@@ -7,59 +7,14 @@ namespace UltraDataBurningROM.Server.Controllers
     [Route("catalogue")]
     public class CatalogueController : ControllerBase
     {
-        public CatalogueController(IPopularContentService popularContentService)
+        private readonly IPopularContentService popularContentService;
+        private readonly ISearchService searchService;
+
+        public CatalogueController(IPopularContentService popularContentService, ISearchService searchService)
         {
             this.popularContentService = popularContentService;
+            this.searchService = searchService;
         }
-
-        private static readonly SearchResult searchResult = new SearchResult
-        {
-            Roms = [
-                new Rom
-                {
-                    RomCid = "serach1",
-                    Entries = [
-                        new FileEntry
-                        {
-                            Filename = "serach1file.txt",
-                            ByteSize = 123456,
-                        }
-                    ],
-                    MountExpiryUtc = new DateTimeOffset(DateTime.UtcNow.AddHours(3)).ToUnixTimeMilliseconds(),
-                    StorageExpiryUtc = new DateTimeOffset(DateTime.UtcNow.AddHours(3)).ToUnixTimeMilliseconds(),
-                    Info = new RomInfo
-                    {
-                        Title = "serach1",
-                        Author = "mr a",
-                        Description = "everyone finds this one",
-                        Tags = "search"
-                    },
-                    MountState = 0
-                },
-                new Rom
-                {
-                    RomCid = "serach2",
-                    Entries = [
-                        new FileEntry
-                        {
-                            Filename = "serach2file.txt",
-                            ByteSize = 123456,
-                        }
-                    ],
-                    MountExpiryUtc = new DateTimeOffset(DateTime.UtcNow.AddHours(3)).ToUnixTimeMilliseconds(),
-                    StorageExpiryUtc = new DateTimeOffset(DateTime.UtcNow.AddDays(3)).ToUnixTimeMilliseconds(),
-                    Info = new RomInfo
-                    {
-                        Title = "serach2",
-                        Author = "mr a",
-                        Description = "everyone finds this one",
-                        Tags = "search"
-                    },
-                    MountState = 0
-                }
-            ]
-        };
-        private readonly IPopularContentService popularContentService;
 
         [HttpGet]
         public async Task<IActionResult> Get()
@@ -70,13 +25,7 @@ namespace UltraDataBurningROM.Server.Controllers
         [HttpPost("search/{query}")]
         public async Task<IActionResult> Search(string query)
         {
-            Console.WriteLine("search query: " + query);
-            return Ok(searchResult);
+            return Ok(searchService.Search(query));
         }
-    }
-
-    public class SearchResult
-    {
-        public Rom[] Roms { get; set; } = Array.Empty<Rom>();
     }
 }

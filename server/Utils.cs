@@ -13,7 +13,9 @@ namespace UltraDataBurningROM.Server
             return tags
                 .Replace(",", " ")
                 .Replace(".", " ")
-                .Split(" ", StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+                .Split(" ", StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
+                .Where(t => t.Length > 1)
+                .ToArray();
         }
     }
 
