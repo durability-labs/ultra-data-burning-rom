@@ -274,7 +274,7 @@ export default function Download() {
       </>
       }
       {
-        (rom.mountState === 1) &&
+        (rom.mountState === 4) &&
         <>
           <div style={{ maxWidth: '600px', margin: '1.5rem auto 1.5rem auto', textAlign: 'center' }}>
             <button
