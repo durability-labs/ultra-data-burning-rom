@@ -58,6 +58,25 @@ namespace ArchivistClient
             }
         }
 
+        public void Download(string cid, string filepath)
+        {
+            lock (_lock)
+            {
+                Log("Downloading file...");
+                var task = node.DownloadNetworkStreamAsync(cid);
+                if (task.Result.StatusCode != 200)
+                {
+                    Log("Failed to download.");
+                    return;
+                }
+                var stream = task.Result.Stream;
+
+                if (File.Exists(filepath)) File.Delete(filepath);
+                using var fileStream = File.OpenWrite(filepath);
+                stream.CopyTo(fileStream);
+            }
+        }
+
         public string PurchaseStorage(
             string cid,
             int nodes,

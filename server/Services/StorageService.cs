@@ -205,6 +205,11 @@ namespace UltraDataBurningROM.Server.Services
                 PurchaseCid = purchaseCid,
             };
         }
+
+        public void Download(string cid, string filepath)
+        {
+            instance.Download(cid, filepath);
+        }
     }
 
     public class PurchaseResponse
