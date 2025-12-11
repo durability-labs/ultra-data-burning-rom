@@ -10,6 +10,8 @@
         void ConvertBucketMountToOpen(string mountId);
         void BeginMount(string romCid);
         void EndMount(string romCid);
+        string GetFilePath(string romCid, string filename);
+        string GetZipFilePath(string romCid);
     }
 
     public class MountService : IMountService
@@ -143,6 +145,33 @@
                 default:
                     throw new Exception("Unvalid state for unmounting: " + mount.State);
             }
+        }
+
+        public string GetFilePath(string romCid, string filename)
+        {
+            var rom = dbService.Get<DbRom>(romCid);
+            if (rom == null) return string.Empty;
+            if (string.IsNullOrEmpty(rom.CurrentMountId)) return string.Empty;
+            var mount = dbService.Get<DbMount>(rom.CurrentMountId);
+            if (mount == null) return string.Empty;
+
+            if (mount.State != MountState.OpenInUse) return string.Empty;
+            if (!rom.Files.Any(f => f.Filename.ToLowerInvariant() == filename.ToLowerInvariant())) return string.Empty;
+
+            return Path.Combine(mount.Path, filename);
+        }
+
+        public string GetZipFilePath(string romCid)
+        {
+            var rom = dbService.Get<DbRom>(romCid);
+            if (rom == null) return string.Empty;
+            if (string.IsNullOrEmpty(rom.CurrentMountId)) return string.Empty;
+            var mount = dbService.Get<DbMount>(rom.CurrentMountId);
+            if (mount == null) return string.Empty;
+
+            if (mount.State != MountState.OpenInUse) return string.Empty;
+
+            return mount.GetZipFilePath();
         }
 
         private DbMount CreateNewMount(MountState state)

@@ -25,11 +25,11 @@ namespace UltraDataBurningROM.Server.Controllers
         }
 
         [HttpDelete("{username}")]
-        public void Delete(string username, [FromBody] DeleteRequest deleteRequest)
+        public void Delete(string username, [FromBody] FilenameRequest filenameRequest)
         {
             try
             {
-                bucketService.DeleteFile(username, deleteRequest.Filename);
+                bucketService.DeleteFile(username, filenameRequest.Filename);
             }
             catch (Exception ex) 
             {
@@ -140,7 +140,7 @@ namespace UltraDataBurningROM.Server.Controllers
         }
     }
 
-    public class DeleteRequest
+    public class FilenameRequest
     {
         public string Filename { get; set; } = string.Empty;
     }
