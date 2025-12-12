@@ -10,6 +10,7 @@ namespace UltraDataBurningROM.Server.Services
 
     public class BurnService : IBurnService
     {
+        private readonly ulong minBurnSize = 5 * 64 * 1024;
         private readonly IDatabaseService dbService;
         private readonly IStorageService storageService;
         private readonly IMountService mountService;
@@ -30,7 +31,7 @@ namespace UltraDataBurningROM.Server.Services
                 if (user == null) throw new Exception("Failed to find user when attempting to start burn.");
                 if (user.BucketBurnState == BucketBurnState.Open)
                 {
-                    if (!BucketExceedsLimit(user))
+                    if (BucketIsValid(user))
                     {
                         // We start!
                         user.BucketBurnState = BucketBurnState.Starting;
@@ -43,12 +44,18 @@ namespace UltraDataBurningROM.Server.Services
             }
         }
 
-        private bool BucketExceedsLimit(DbUser user)
+        private bool BucketIsValid(DbUser user)
         {
+            var mount = mountService.Get(user.BucketMountId);
+            if (mount == null) return false;
+            if (mount.State != MountState.Bucket) return false;
+
             var files = mountService.GetFileEntries(user.BucketMountId);
+            if (files == null || files.Length == 0) return false;
+
             var usedSize = 0UL;
-            foreach (var file in files) usedSize += file.ByteSize; // This is no .Sum for ulongs :o
-            return usedSize > EnvConfig.VolumeSize;
+            foreach (var file in files) usedSize += file.ByteSize;
+            return usedSize > minBurnSize && usedSize <= EnvConfig.VolumeSize;
         }
 
         private void StartWorker(DbUser user, BurnInfo burnInfo)
