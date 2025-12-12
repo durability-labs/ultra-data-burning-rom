@@ -33,6 +33,24 @@ namespace UltraDataBurningROM.Server.Services
             {
                 Representation = new DurabilityOption
                 {
+                    Id = 1003,
+                    Name = "D6-HADS",
+                    PriceLine = GetPriceLine(Mb700, TimeSpan.FromDays(6.0)),
+                    Description = "6-Days high-availability decentralized storage",
+                    SponsorLine = DurabilityLabsSponsorLine
+                },
+                Nodes = 6,
+                Tolerance = 3,
+                Duration = TimeSpan.FromDays(6.0),
+                Expiry = TimeSpan.FromMinutes(30.0),
+                PricePerBytePerSecond = 1000,
+                CollateralPerByte = 1,
+                ProofProbability = 244
+            },
+            new DurabilityConfig
+            {
+                Representation = new DurabilityOption
+                {
                     Id = 1001,
                     Name = "D14-HADS",
                     PriceLine = GetPriceLine(Mb700, TimeSpan.FromDays(14.0)),
