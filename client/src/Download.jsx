@@ -69,7 +69,8 @@ export default function Download() {
   const handleDownload = useCallback(async (file, idx) => {
     if (!username || !romCid) return;
     try {
-      const res = await fetch(`/rom/${username}/${romCid}/file`,{
+      const res = await fetch(`/rom/${username}/${romCid}/file`, {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           filename: file.filename
@@ -96,7 +97,9 @@ export default function Download() {
   const handleDownloadRom = useCallback(async () => {
         if (!username || !romCid) return;
     try {
-      const res = await fetch(`/rom/${username}/${romCid}/all`);
+      const res = await fetch(`/rom/${username}/${romCid}/all`, {
+        method: 'POST'
+      });
       if (!res.ok) {
         console.error('Download failed', res.status, res.statusText);
         return;

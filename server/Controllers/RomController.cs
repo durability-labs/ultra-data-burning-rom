@@ -41,7 +41,7 @@ namespace UltraDataBurningROM.Server.Controllers
             return Rom(romcid);
         }
 
-        [HttpGet("{username}/{romcid}/file")]
+        [HttpPost("{username}/{romcid}/file")]
         public async Task<IActionResult> GetFile(string username, string romcid, [FromBody] FilenameRequest filenameRequest)
         {
             if (!userService.IsValid(username)) return Ok();
@@ -49,7 +49,7 @@ namespace UltraDataBurningROM.Server.Controllers
             return ProvideFile(filePath);
         }
 
-        [HttpGet("{username}/{romcid}/all")]
+        [HttpPost("{username}/{romcid}/all")]
         public async Task<IActionResult> GetArchive(string username, string romcid)
         {
             if (!userService.IsValid(username)) return Ok();
