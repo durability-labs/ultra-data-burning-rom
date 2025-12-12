@@ -5,12 +5,14 @@ namespace UltraDataBurningROM.Server.Services
     public interface IDownloadService
     {
         void LaunchDownload(DbRom rom, DbMount mount, Action whenDone);
+        bool IsDownloading(string mountId);
     }
 
     public class DownloadService : IDownloadService
     {
         private readonly IStorageService storageService;
         private static readonly Lock _downloadBurnLock = new Lock();
+        private readonly List<string> mountsBusyDownloading = new List<string>();
 
         public DownloadService(IStorageService storageService)
         {
@@ -26,14 +28,21 @@ namespace UltraDataBurningROM.Server.Services
                     var node = storageService.TakeNode();
                     try
                     {
+                        mountsBusyDownloading.Add(mount.Id);
                         RunDownload(node, rom, mount, whenDone);
                     }
                     finally
                     {
+                        mountsBusyDownloading.Remove(mount.Id);
                         storageService.ReleaseNode(node);
                     }
                 }
             });
+        }
+
+        public bool IsDownloading(string mountId)
+        {
+            return mountsBusyDownloading.Contains(mountId);
         }
 
         private void RunDownload(IStorageNode node, DbRom rom, DbMount mount, Action whenDone)
