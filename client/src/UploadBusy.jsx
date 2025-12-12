@@ -30,12 +30,20 @@ export default function UploadBusy(username, setActiveTab, setRomCid, bucket) {
 
   return (
     <>
-      <div style={{ border: '2px solid #1976d2', borderRadius: '8px', padding: '1rem', background: '#181818ff', maxWidth: '600px', margin: '0 auto' }}>
-        Busy... {bucketStates[bucket.state]}
+      <div style={{ color: 'rgba(238, 238, 238, 1)', border: '2px solid #1976d2', borderRadius: '8px', padding: '1rem', background: '#181818ff', maxWidth: '600px', margin: '0 auto' }}>
+        <div>
+          Burning ROM...
+        </div>
+        <div>
+         {bucketStates[bucket.state]}
+        </div>
+        <div>
+          This can take up to 20 minutes...
+        </div>
       </div>
       {(bucket.romCid &&
         <div style={{ border: '2px solid #6bb1f7ff', borderRadius: '8px', padding: '1rem', background: '#181818ff', margin: '1rem' }}>
-            <strong>ROM CID:</strong> {bucket.romCid}
+            <strong>Finished! ROM CID:</strong> {bucket.romCid}
             <div>
               <button
                 style={{

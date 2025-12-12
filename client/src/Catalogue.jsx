@@ -50,7 +50,7 @@ export default function Catalogue() {
   }
 
   return <>
-    <div style={{ border: '2px solid #1976d2', borderRadius: '8px', padding: '1rem', margin: '1rem', background: '#181818ff', maxWidth: '600px', margin: '0 auto' }}>
+    <div style={{ color: 'rgba(238, 238, 238, 1)', border: '2px solid #1976d2', borderRadius: '8px', padding: '1rem', margin: '1rem', background: '#181818ff', maxWidth: '600px', margin: '0 auto' }}>
       <div style={{ borderBottom: '1px solid #ccc', textAlign: 'left', padding: '8px' }}>Search</div>
       <input
         type="text"
@@ -99,7 +99,7 @@ export default function Catalogue() {
         </div>
       </div>
     </div>
-    <div style={{ border: '2px solid #1976d2', borderRadius: '8px', padding: '1rem', margin: '1rem', background: '#181818ff', maxWidth: '600px', margin: '0 auto' }}>
+    <div style={{ color: 'rgba(238, 238, 238, 1)', border: '2px solid #1976d2', borderRadius: '8px', padding: '1rem', margin: '1rem', background: '#181818ff', maxWidth: '600px', margin: '0 auto' }}>
       <div style={{ borderBottom: '1px solid #ccc', textAlign: 'left', padding: '8px' }}>Results</div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '0.75rem' }}>
         {(searchResult?.roms?.length ? searchResult.roms : []).map((rom, index) => {

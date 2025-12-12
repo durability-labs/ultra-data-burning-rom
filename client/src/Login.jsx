@@ -27,6 +27,7 @@ export default function LoginDialog({ onAccept }) {
     }}>
       <div style={{
         background: '#363636ff',
+        color: 'rgba(238, 238, 238, 1)',
         padding: '2rem',
         borderRadius: '8px',
         minWidth: '320px',

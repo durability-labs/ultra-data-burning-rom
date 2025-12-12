@@ -23,7 +23,7 @@ export default function UploadOpen(username, bucket, bytesUsed) {
 
   return (bucket && (
     <>
-      <div style={{ border: '2px solid #1976d2', borderRadius: '8px', padding: '1rem', background: '#181818ff', maxWidth: '600px', margin: '0 auto' }}>
+      <div style={{ color: 'rgba(238, 238, 238, 1)', border: '2px solid #1976d2', borderRadius: '8px', padding: '1rem', background: '#181818ff', maxWidth: '600px', margin: '0 auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr>

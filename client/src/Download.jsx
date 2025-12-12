@@ -173,7 +173,7 @@ export default function Download() {
   }
 
   return <>
-    <div style={{ border: '2px solid #1976d2', borderRadius: '8px', padding: '1rem', margin: '1rem', background: '#181818ff', maxWidth: '600px', margin: '0 auto' }}>
+    <div style={{ color: 'rgba(238, 238, 238, 1)', border: '2px solid #1976d2', borderRadius: '8px', padding: '1rem', margin: '1rem', background: '#181818ff', maxWidth: '600px', margin: '0 auto' }}>
       <label style={{ display: 'block', marginBottom: '0.5rem' }}>ROM CID</label>
       <div>{romCid}</div>
 
@@ -198,7 +198,7 @@ export default function Download() {
         </tbody>
       </table>
     </div>
-    <div style={{ border: '2px solid #1976d2', borderRadius: '8px', padding: '1rem', margin: '1rem', background: '#181818ff', maxWidth: '600px', margin: '0 auto' }}>
+    <div style={{ color: 'rgba(238, 238, 238, 1)', border: '2px solid #1976d2', borderRadius: '8px', padding: '1rem', margin: '1rem', background: '#181818ff', maxWidth: '600px', margin: '0 auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr>
@@ -299,8 +299,8 @@ export default function Download() {
       {
         (rom.mountState === 2) &&
         <>
-          <div style={{ maxWidth: '600px', margin: '1.5rem auto 1.5rem auto', textAlign: 'center' }}>
-            Spinning it up... Stand by...
+          <div style={{ color: 'rgba(238, 238, 238, 1)', maxWidth: '600px', margin: '1.5rem auto 1.5rem auto', textAlign: 'center' }}>
+            Spinning it up... Stand by... (This can take a few minutes)
           </div>
         </>
       }
