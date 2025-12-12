@@ -64,7 +64,7 @@
 
             foreach (var item in toCleanup)
             {
-                if (Directory.Exists(item.Path)) Directory.Delete(item.Path);
+                if (Directory.Exists(item.Path)) Directory.Delete(item.Path, true);
                 if (File.Exists(item.GetZipFilePath())) File.Delete(item.GetZipFilePath());
             }
         }
