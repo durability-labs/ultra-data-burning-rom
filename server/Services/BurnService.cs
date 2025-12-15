@@ -6,6 +6,7 @@ namespace UltraDataBurningROM.Server.Services
     public interface IBurnService
     {
         void StartBurn(string username, BurnInfo burnInfo);
+        void ExtendRom(string romcid, ulong durabilityOptionId);
     }
 
     public class BurnService : IBurnService
@@ -42,6 +43,33 @@ namespace UltraDataBurningROM.Server.Services
                     }
                 }
             }
+        }
+
+        public void ExtendRom(string romcid, ulong durabilityOptionId)
+        {
+            var rom = dbService.Get<DbRom>(romcid);
+            if (rom == null) return;
+
+            if (rom.StorageExpireUtc > (DateTime.UtcNow + TimeSpan.FromHours(48.0))) return;
+            if (rom.StorageExpireUtc < DateTime.UtcNow) return;
+
+            Task.Run(() =>
+            {
+                lock (_startBurnLock)
+                {
+                    var node = storageService.TakeNode();
+                    try
+                    {
+                        var purchase = node.PurchaseStorage(rom.RomCid, durabilityOptionId);
+                        rom.StorageExpireUtc = purchase.FinishUtc;
+                        dbService.Save(rom);
+                    }
+                    finally
+                    {
+                        storageService.ReleaseNode(node);
+                    }
+                }
+            });
         }
 
         private bool BucketIsValid(DbUser user)

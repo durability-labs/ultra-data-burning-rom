@@ -104,7 +104,7 @@ export default function Catalogue() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '0.75rem' }}>
         {(searchResult?.roms?.length ? searchResult.roms : []).map((rom, index) => {
           const cardKey = rom?.romCid;
-          const expiresSoon = (rom.storageExpiryUtc - Date.now()) < 24 * 60 * 60 * 1000;
+          const expiresSoon = (rom.storageExpiryUtc - Date.now()) < 48 * 60 * 60 * 1000;
           return (
             <div
               key={cardKey}

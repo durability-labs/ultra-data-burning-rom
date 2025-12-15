@@ -494,7 +494,7 @@ export default function Download() {
       <div style={{ marginBottom: '0.5rem', color: '#fff', fontSize: '0.75rem' }}>
         ROM will expire: {new Date(rom.storageExpiryUtc).toLocaleString()}
       </div>
-      {(((rom.storageExpiryUtc - Date.now()) < 24 * 60 * 60 * 1000) && 
+      {(((rom.storageExpiryUtc - Date.now()) < 48 * 60 * 60 * 1000) && 
         <div>          
             <button
             onClick={handleExtendStorage}

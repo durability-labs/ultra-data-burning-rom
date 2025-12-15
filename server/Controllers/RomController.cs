@@ -10,12 +10,14 @@ namespace UltraDataBurningROM.Server.Controllers
         private readonly IUserService userService;
         private readonly IMapperService mapperService;
         private readonly IMountService mountService;
+        private readonly IBurnService burnService;
 
-        public RomController(IUserService userService, IMapperService mapperService, IMountService mountService)
+        public RomController(IUserService userService, IMapperService mapperService, IMountService mountService, IBurnService burnService)
         {
             this.userService = userService;
             this.mapperService = mapperService;
             this.mountService = mountService;
+            this.burnService = burnService;
         }
 
         [HttpGet("{username}/{romcid}")]
@@ -60,7 +62,8 @@ namespace UltraDataBurningROM.Server.Controllers
         [HttpPost("{username}/{romcid}/extend/{durabilityOptionId}")]
         public async Task<IActionResult> Extend(string username, string romcid, ulong durabilityOptionId)
         {
-            Console.WriteLine("TODO: extend with id " + durabilityOptionId);
+            if (!userService.IsValid(username)) return Ok();
+            burnService.ExtendRom(romcid, durabilityOptionId);
             return Ok();
         }
 
