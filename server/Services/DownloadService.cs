@@ -10,12 +10,14 @@ namespace UltraDataBurningROM.Server.Services
 
     public class DownloadService : IDownloadService
     {
+        private readonly ILogger<DownloadService> logger;
         private readonly IStorageService storageService;
         private static readonly Lock _downloadBurnLock = new Lock();
         private readonly List<string> mountsBusyDownloading = new List<string>();
 
-        public DownloadService(IStorageService storageService)
+        public DownloadService(ILogger<DownloadService> logger, IStorageService storageService)
         {
+            this.logger = logger;
             this.storageService = storageService;
         }
 
@@ -25,6 +27,7 @@ namespace UltraDataBurningROM.Server.Services
             {
                 lock (_downloadBurnLock)
                 {
+                    logger.LogInformation("Download started: {cid}", rom.RomCid);
                     var node = storageService.TakeNode();
                     try
                     {
@@ -35,6 +38,7 @@ namespace UltraDataBurningROM.Server.Services
                     {
                         mountsBusyDownloading.Remove(mount.Id);
                         storageService.ReleaseNode(node);
+                        logger.LogInformation("Download finished: {cid}", rom.RomCid);
                     }
                 }
             });

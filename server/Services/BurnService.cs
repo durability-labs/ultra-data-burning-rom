@@ -12,13 +12,15 @@ namespace UltraDataBurningROM.Server.Services
     public class BurnService : IBurnService
     {
         private readonly ulong minBurnSize = 5 * 64 * 1024;
+        private readonly ILogger<BurnService> logger;
         private readonly IDatabaseService dbService;
         private readonly IStorageService storageService;
         private readonly IMountService mountService;
         private static readonly Lock _startBurnLock = new Lock();
 
-        public BurnService(IDatabaseService dbService, IStorageService storageService, IMountService mountService)
+        public BurnService(ILogger<BurnService> logger, IDatabaseService dbService, IStorageService storageService, IMountService mountService)
         {
+            this.logger = logger;
             this.dbService = dbService;
             this.storageService = storageService;
             this.mountService = mountService;
@@ -39,6 +41,7 @@ namespace UltraDataBurningROM.Server.Services
                         user.BucketNewRomCid = string.Empty;
                         dbService.Save(user);
 
+                        logger.LogInformation("Burn input accepted.");
                         StartWorker(user, burnInfo);
                     }
                 }
@@ -53,6 +56,7 @@ namespace UltraDataBurningROM.Server.Services
             if (rom.StorageExpireUtc > (DateTime.UtcNow + TimeSpan.FromHours(48.0))) return;
             if (rom.StorageExpireUtc < DateTime.UtcNow) return;
 
+            logger.LogInformation("Extending ROM...");
             Task.Run(() =>
             {
                 lock (_startBurnLock)
@@ -93,13 +97,13 @@ namespace UltraDataBurningROM.Server.Services
                 var node = storageService.TakeNode();
                 try
                 {
-                    Console.WriteLine("Starting burn for " + user.Username);
-                    var run = new WorkerRun(dbService, mountService, node, user, burnInfo);
+                    logger.LogInformation("Starting burn for {user}", user.Username);
+                    var run = new WorkerRun(logger, dbService, mountService, node, user, burnInfo);
                     run.RunWorker();
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine("Burn failed with exception: " + ex);
+                    logger.LogError(ex, "Burn failed with exception");
                     ReturnUserToOpenState(user);
                 }
                 finally
@@ -129,6 +133,7 @@ namespace UltraDataBurningROM.Server.Services
 
     public class WorkerRun
     {
+        private readonly ILogger<BurnService> logger;
         private readonly IDatabaseService dbService;
         private readonly IMountService mountService;
         private readonly IStorageNode storageNode;
@@ -138,8 +143,9 @@ namespace UltraDataBurningROM.Server.Services
         private string uploadCid = string.Empty;
         private PurchaseResponse purchase = new PurchaseResponse();
 
-        public WorkerRun(IDatabaseService dbService, IMountService mountService, IStorageNode storageNode, DbUser user, BurnInfo burnInfo)
+        public WorkerRun(ILogger<BurnService> logger, IDatabaseService dbService, IMountService mountService, IStorageNode storageNode, DbUser user, BurnInfo burnInfo)
         {
+            this.logger = logger;
             this.dbService = dbService;
             this.mountService = mountService;
             this.storageNode = storageNode;
@@ -227,6 +233,7 @@ namespace UltraDataBurningROM.Server.Services
         {
             user.BucketBurnState = newState;
             dbService.Save(user);
+            logger.LogInformation("Burn state: {newState}", newState);
         }
 
         private class InfoFileContent

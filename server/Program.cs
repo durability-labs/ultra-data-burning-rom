@@ -2,6 +2,7 @@ using UltraDataBurningROM.Server;
 using UltraDataBurningROM.Server.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Logging.AddConsole();
 
 // Initialize the storage immediately.
 var storageService = new StorageService();

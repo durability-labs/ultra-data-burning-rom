@@ -1,6 +1,4 @@
-﻿using UltraDataBurningROM.Server.Controllers;
-
-namespace UltraDataBurningROM.Server.Services
+﻿namespace UltraDataBurningROM.Server.Services
 {
     public interface IPopularContentService
     {
@@ -11,13 +9,15 @@ namespace UltraDataBurningROM.Server.Services
     public class PopularContentService : IPopularContentService
     {
         public const string PopContentId = "popcontentid";
+        private readonly ILogger logger;
         private readonly IDatabaseService databaseService;
         private readonly IWorkerService workerService;
         private readonly IMapperService mapperService;
         private PopularInfo info = new PopularInfo();
 
-        public PopularContentService(IDatabaseService databaseService, IWorkerService workerService, IMapperService mapperService)
+        public PopularContentService(ILogger<PopularContentService> logger, IDatabaseService databaseService, IWorkerService workerService, IMapperService mapperService)
         {
+            this.logger = logger;
             this.databaseService = databaseService;
             this.workerService = workerService;
             this.mapperService = mapperService;
@@ -25,8 +25,6 @@ namespace UltraDataBurningROM.Server.Services
 
         public void Start()
         {
-            Log("Starting PopularContentService...");
-            
             UpdateInfo(GetOrCreateDbEntry());
 
             workerService.Attach(() => new PopularUpdateContext(OnResult));
@@ -41,6 +39,7 @@ namespace UltraDataBurningROM.Server.Services
         {
             databaseService.Save(result);
             UpdateInfo(result);
+            logger.LogInformation("Popular content updated.");
         }
 
         private DbPopContent GetOrCreateDbEntry()
@@ -61,11 +60,6 @@ namespace UltraDataBurningROM.Server.Services
                 Roms = mapperService.Map(db.RomCids),
                 Tags = db.Tags
             };
-        }
-
-        private void Log(string msg)
-        {
-            Console.WriteLine(msg);
         }
     }
 
@@ -124,7 +118,6 @@ namespace UltraDataBurningROM.Server.Services
             var tags = Utils.SplitTagString(dbRom.Info.Tags);
             foreach (var tag in tags)
             {
-                Console.WriteLine("popular tag: " + tag);
                 AddOrAdd(tag);
             }
         }

@@ -88,13 +88,15 @@ namespace UltraDataBurningROM.Server.Services
         private readonly Durability durability;
         private readonly List<StorageNode> nodes = new List<StorageNode>();
         private static readonly Lock _nodesLock = new Lock();
+        private readonly ILogger logger;
 
-        public StorageService()
+        public StorageService(ILogger<StorageService> logger)
         {
             durability = new Durability
             {
                 Options = config.Select(c => c.Representation).ToArray()
             };
+            this.logger = logger;
         }
 
         public void Initialize()
@@ -103,22 +105,23 @@ namespace UltraDataBurningROM.Server.Services
             nodes.AddRange(
                 endpoints.Select(e =>
                 {
-                    Console.WriteLine("Pinging Archivist node at: " + e);
-                    var instance = new ArchivistInstance(e);
+                    logger.LogInformation("Pinging Archivist node at: {e}", e);
+                    var instance = new ArchivistInstance(msg => logger.LogInformation(msg), e);
 
                     while (!instance.Ping())
                     {
-                        Console.WriteLine("Ping...");
                         Thread.Sleep(TimeSpan.FromSeconds(10));
                     }
 
+                    logger.LogInformation("OK: {e}", e);
                     return new StorageNode(
+                        logger,
                         instance,
                         config
                     );
                 })
             );
-            Console.WriteLine("Storage service initialized.");
+            logger.LogInformation("Storage service initialized.");
         }
 
         public Durability GetDurability()
@@ -141,6 +144,7 @@ namespace UltraDataBurningROM.Server.Services
                             // Move to the back of the list.
                             nodes.Remove(n);
                             nodes.Add(n);
+                            logger.LogInformation("Node in use");
                             return n;
                         }
                     }
@@ -155,6 +159,7 @@ namespace UltraDataBurningROM.Server.Services
             {
                 var n = (StorageNode)node;
                 n.InUse = false;
+                logger.LogInformation("Node released");
             }
         }
 
@@ -179,24 +184,30 @@ namespace UltraDataBurningROM.Server.Services
 
     public class StorageNode : IStorageNode
     {
+        private readonly ILogger logger;
         private readonly ArchivistInstance instance;
         private readonly DurabilityConfig[] config;
 
         public bool InUse { get; set; } = false;
 
-        public StorageNode(ArchivistInstance instance, DurabilityConfig[] config)
+        public StorageNode(ILogger logger, ArchivistInstance instance, DurabilityConfig[] config)
         {
+            this.logger = logger;
             this.instance = instance;
             this.config = config;
         }
 
         public string Upload(string filepath)
         {
-            return instance.UploadFile(filepath);
+            logger.LogInformation("Uploading file {filepath}", filepath);
+            var cid = instance.UploadFile(filepath);
+            logger.LogInformation("Uploaded file {filepath} to {cid}", filepath, cid);
+            return cid;
         }
 
         public PurchaseResponse PurchaseStorage(string cid, ulong optionId)
         {
+            logger.LogInformation("Purchasing storage for {cid} with option {optionId}", cid, optionId);
             var selected = config.Single(c => c.Representation.Id == optionId);
 
             var purchaseId = instance.PurchaseStorage(cid,
@@ -209,6 +220,9 @@ namespace UltraDataBurningROM.Server.Services
                 selected.ProofProbability
             );
 
+            logger.LogInformation("Purchase for {cid} with option {optionId} yielded {purchaseId}", cid, optionId, purchaseId);
+
+            logger.LogInformation("Waiting for {purchaseId} to start...", purchaseId);
             if (!instance.WaitForPurchaseStarted(purchaseId, selected.Expiry))
             {
                 throw new Exception("Failed to start purchase");
@@ -216,6 +230,8 @@ namespace UltraDataBurningROM.Server.Services
             var startUtc = DateTime.UtcNow - TimeSpan.FromSeconds(30.0);
             var purchaseCid = instance.GetPurchaseCid(purchaseId);
             var finishUtc = startUtc + selected.Duration;
+
+            logger.LogInformation("Purchase {purchaseId} successfully started.", purchaseId);
 
             return new PurchaseResponse
             {

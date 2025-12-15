@@ -17,14 +17,16 @@
     public class WorkerService : IWorkerService
     {
         private readonly TimeSpan UpdateFrequency = TimeSpan.FromMinutes(30.0);
+        private readonly ILogger<WorkerService> logger;
         private readonly IDatabaseService dbService;
         private readonly CancellationTokenSource cts = new CancellationTokenSource();
         private readonly Lock _lock = new Lock();
         private readonly Dictionary<string, IJob> jobs = new Dictionary<string, IJob>();
         private Task worker = Task.CompletedTask;
 
-        public WorkerService(IDatabaseService dbService)
+        public WorkerService(ILogger<WorkerService> logger, IDatabaseService dbService)
         {
+            this.logger = logger;
             this.dbService = dbService;
         }
 
@@ -101,7 +103,7 @@
 
         private void Log(string msg)
         {
-            Console.WriteLine(msg);
+            logger.LogInformation(msg);
         }
 
         private interface IJob

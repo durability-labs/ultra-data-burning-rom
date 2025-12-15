@@ -6,8 +6,9 @@ namespace ArchivistClient
     {
         private readonly ArchivistNode node;
         private readonly Lock _lock = new Lock();
+        private readonly Action<string> onLog;
 
-        public ArchivistInstance(string url)
+        public ArchivistInstance(Action<string> onLog, string url)
         {
             var httpClient = new HttpClient();
             httpClient.Timeout = TimeSpan.FromMinutes(5.0);
@@ -15,6 +16,7 @@ namespace ArchivistClient
             node = new ArchivistNode(httpClient);
             node.BaseUrl = $"{url}/api/archivist/v1/";
             Log("BaseURL: " + node.BaseUrl);
+            this.onLog = onLog;
         }
 
         public bool Ping()
@@ -152,9 +154,8 @@ namespace ArchivistClient
 
         private void Log(string msg)
         {
-            Console.WriteLine(msg);
+            onLog(msg);
         }
-
     }
 
     public partial class ArchivistNode

@@ -14,12 +14,14 @@
     public class BucketService : IBucketService
     {
         private readonly ulong volumeSize = EnvConfig.VolumeSize;
+        private readonly ILogger<BucketService> logger;
         private readonly IUserService userService;
         private readonly IMountService mountService;
         private readonly IBurnService burnService;
 
-        public BucketService(IUserService userService, IMountService mountService, IBurnService burnService)
+        public BucketService(ILogger<BucketService> logger, IUserService userService, IMountService mountService, IBurnService burnService)
         {
+            this.logger = logger;
             this.userService = userService;
             this.mountService = mountService;
             this.burnService = burnService;
@@ -48,6 +50,7 @@
         {
             if (!userService.IsValid(username)) return;
             var user = userService.GetUser(username);
+            logger.LogInformation("Delete file: {filename}", filename);
             mountService.DeleteFile(user.BucketMountId, filename);
         }
 
@@ -84,6 +87,7 @@
         public void StartBurn(string username, BurnInfo burnInfo)
         {
             if (!userService.IsValid(username)) return;
+            logger.LogInformation("Starting burn...");
             burnService.StartBurn(username, burnInfo);
         }
 

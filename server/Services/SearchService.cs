@@ -12,11 +12,13 @@ namespace UltraDataBurningROM.Server.Services
     {
         private readonly Lock _lock = new Lock();
         private Dictionary<string, List<string>> index = new Dictionary<string, List<string>>();
+        private readonly ILogger<SearchService> logger;
         private readonly IMapperService mapperService;
         private readonly IWorkerService workerService;
 
-        public SearchService(IMapperService mapperService, IWorkerService workerService)
+        public SearchService(ILogger<SearchService> logger, IMapperService mapperService, IWorkerService workerService)
         {
+            this.logger = logger;
             this.mapperService = mapperService;
             this.workerService = workerService;
         }
@@ -58,6 +60,7 @@ namespace UltraDataBurningROM.Server.Services
             lock (_lock)
             {
                 index = newIndex;
+                logger.LogInformation("Search index updated.");
             }
         }
     }
