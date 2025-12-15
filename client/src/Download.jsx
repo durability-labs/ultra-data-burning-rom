@@ -43,6 +43,20 @@ export default function Download() {
   const [selectedDurabilityId, setSelectedDurabilityId] = useState(null);
   const [showExtendOptions, setShowExtendOptions] = useState(false);
 
+  const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState(0);
+  const [downloadStatus, setDownloadStatus] = useState('idle'); // 'idle' | 'downloading' | 'success' | 'error'
+  const [downloadFileName, setDownloadFileName] = useState('');
+  const [downloadError, setDownloadError] = useState('');
+
+  const resetDownloadState = () => {
+    setIsDownloadModalOpen(false);
+    setDownloadProgress(0);
+    setDownloadStatus('idle');
+    setDownloadFileName('');
+    setDownloadError('');
+  };
+
   const updateRom = useCallback((user, cid) => {
     if (!user) return;
     if (!cid) return;
@@ -68,53 +82,118 @@ export default function Download() {
 
   const handleDownload = useCallback(async (file, idx) => {
     if (!username || !romCid) return;
+
+    setIsDownloadModalOpen(true);
+    setDownloadStatus('downloading');
+    setDownloadProgress(0);
+    setDownloadFileName(file.filename || 'file');
+    setDownloadError('');
+
     try {
-      const res = await fetch(`/rom/${username}/${romCid}/file`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', `/rom/${username}/${romCid}/file`);
+      xhr.responseType = 'blob';
+      xhr.setRequestHeader('Content-Type', 'application/json');
+
+      xhr.onprogress = (e) => {
+        if (e.lengthComputable) {
+          const percent = Math.round((e.loaded / e.total) * 100);
+          setDownloadProgress(percent);
+        }
+      };
+
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          const blob = xhr.response;
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = file.filename || 'file';
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          URL.revokeObjectURL(url);
+
+          setDownloadProgress(100);
+          setDownloadStatus('success');
+        } else {
+          console.error('Download failed', xhr.status, xhr.statusText);
+          setDownloadStatus('error');
+          setDownloadError('Download failed.');
+        }
+      };
+
+      xhr.onerror = () => {
+        console.error('Error downloading file');
+        setDownloadStatus('error');
+        setDownloadError('Error downloading file.');
+      };
+
+      xhr.send(
+        JSON.stringify({
           filename: file.filename
         })
-      });
-      if (!res.ok) {
-        console.error('Download failed', res.status, res.statusText);
-        return;
-      }
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = file.filename || 'file';
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
+      );
     } catch (err) {
       console.error('Error downloading file', err);
+      setDownloadStatus('error');
+      setDownloadError('Error downloading file.');
     }
   }, [username, romCid]);
 
   const handleDownloadRom = useCallback(async () => {
-        if (!username || !romCid) return;
+    if (!username || !romCid) return;
+
+    setIsDownloadModalOpen(true);
+    setDownloadStatus('downloading');
+    setDownloadProgress(0);
+    setDownloadFileName(romCid || 'rom');
+    setDownloadError('');
+
     try {
-      const res = await fetch(`/rom/${username}/${romCid}/all`, {
-        method: 'POST'
-      });
-      if (!res.ok) {
-        console.error('Download failed', res.status, res.statusText);
-        return;
-      }
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = romCid;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', `/rom/${username}/${romCid}/all`);
+      xhr.responseType = 'blob';
+
+      xhr.onprogress = (e) => {
+        if (e.lengthComputable) {
+          const percent = Math.round((e.loaded / e.total) * 100);
+          setDownloadProgress(percent);
+        }
+      };
+
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          const blob = xhr.response;
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = romCid;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          URL.revokeObjectURL(url);
+
+          setDownloadProgress(100);
+          setDownloadStatus('success');
+        } else {
+          console.error('Download failed', xhr.status, xhr.statusText);
+          setDownloadStatus('error');
+          setDownloadError('Download failed.');
+        }
+      };
+
+      xhr.onerror = () => {
+        console.error('Error downloading file');
+        setDownloadStatus('error');
+        setDownloadError('Error downloading file.');
+      };
+
+      xhr.send();
     } catch (err) {
       console.error('Error downloading file', err);
+      setDownloadStatus('error');
+      setDownloadError('Error downloading file.');
     }
   }, [username, romCid]);
 
@@ -239,6 +318,114 @@ export default function Download() {
           </tbody>
         </table>
       </div>
+
+      {isDownloadModalOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.4)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            style={{
+              minWidth: '280px',
+              maxWidth: '400px',
+              background: '#eee',
+              color: '#000',
+              borderRadius: '8px',
+              padding: '1rem 1.25rem',
+              boxShadow: '0 8px 24px rgba(0,0,0,0.18)'
+            }}
+          >
+            {downloadStatus === 'downloading' && (
+              <div>
+                <div style={{ marginBottom: '0.5rem', fontWeight: 500 }}>
+                  Downloading {downloadFileName || 'file'}...
+                </div>
+                <div
+                  style={{
+                    width: '100%',
+                    height: '10px',
+                    borderRadius: '999px',
+                    background: '#e0e0e0',
+                    overflow: 'hidden',
+                    margin: '0.5rem 0 0.25rem'
+                  }}
+                >
+                  <div
+                    style={{
+                      width: `${downloadProgress}%`,
+                      height: '100%',
+                      background: '#1976d2',
+                      transition: 'width 0.2s ease'
+                    }}
+                  />
+                </div>
+                <div style={{ fontSize: '0.85rem', color: '#555' }}>
+                  {downloadProgress}%
+                </div>
+              </div>
+            )}
+
+            {downloadStatus === 'success' && (
+              <div>
+                <div style={{ marginBottom: '0.5rem', fontWeight: 500 }}>
+                  Download complete
+                </div>
+                <div style={{ fontSize: '0.9rem', marginBottom: '1rem' }}>
+                  {downloadFileName} has been downloaded successfully.
+                </div>
+                <button
+                  onClick={resetDownloadState}
+                  style={{
+                    padding: '0.35rem 1.25rem',
+                    fontSize: '0.9rem',
+                    background: '#1976d2',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Close
+                </button>
+              </div>
+            )}
+
+            {downloadStatus === 'error' && (
+              <div>
+                <div style={{ marginBottom: '0.5rem', fontWeight: 500, color: '#d32f2f' }}>
+                  Download failed
+                </div>
+                <div style={{ fontSize: '0.9rem', marginBottom: '1rem' }}>
+                  {downloadError || 'Something went wrong during the download.'}
+                </div>
+                <button
+                  onClick={resetDownloadState}
+                  style={{
+                    padding: '0.35rem 1.25rem',
+                    fontSize: '0.9rem',
+                    background: '#d32f2f',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Close
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
       {(rom.mountState === 3) && 
       <>
         <div style={{ maxWidth: '600px', margin: '1.5rem auto 1.5rem auto', textAlign: 'center' }}>
