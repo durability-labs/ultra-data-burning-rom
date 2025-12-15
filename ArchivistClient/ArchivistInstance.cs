@@ -10,13 +10,14 @@ namespace ArchivistClient
 
         public ArchivistInstance(Action<string> onLog, string url)
         {
+            this.onLog = onLog;
+
             var httpClient = new HttpClient();
             httpClient.Timeout = TimeSpan.FromMinutes(5.0);
 
             node = new ArchivistNode(httpClient);
             node.BaseUrl = $"{url}/api/archivist/v1/";
             Log("BaseURL: " + node.BaseUrl);
-            this.onLog = onLog;
         }
 
         public bool Ping()

@@ -4,7 +4,7 @@ namespace UltraDataBurningROM.Server.Services
 {
     public interface IStorageService
     {
-        void Initialize();
+        void Initialize(ILogger<StorageService> logger);
         Durability GetDurability();
         IStorageNode TakeNode();
         void ReleaseNode(IStorageNode node);
@@ -88,19 +88,19 @@ namespace UltraDataBurningROM.Server.Services
         private readonly Durability durability;
         private readonly List<StorageNode> nodes = new List<StorageNode>();
         private static readonly Lock _nodesLock = new Lock();
-        private readonly ILogger logger;
+        private ILogger logger = null!;
 
-        public StorageService(ILogger<StorageService> logger)
+        public StorageService()
         {
             durability = new Durability
             {
                 Options = config.Select(c => c.Representation).ToArray()
             };
-            this.logger = logger;
         }
 
-        public void Initialize()
+        public void Initialize(ILogger<StorageService> logger)
         {
+            this.logger = logger;
             var endpoints = EnvConfig.ArchivistEndpoints;
             nodes.AddRange(
                 endpoints.Select(e =>

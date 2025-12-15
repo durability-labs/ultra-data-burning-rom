@@ -6,7 +6,6 @@ builder.Logging.AddConsole();
 
 // Initialize the storage immediately.
 var storageService = new StorageService();
-storageService.Initialize();
 
 // We use the configured volume size as the max request size.
 long maxRequestBodySize = Convert.ToInt64(EnvConfig.VolumeSize);
@@ -47,6 +46,8 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.MapFallbackToFile("/index.html");
+
+storageService.Initialize(app.Services.GetService<ILogger<StorageService>>()!);
 
 var popularContentService = app.Services.GetService<IPopularContentService>()!;
 var searchService = app.Services.GetService<ISearchService>()!;
