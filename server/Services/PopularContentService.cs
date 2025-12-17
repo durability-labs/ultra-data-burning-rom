@@ -39,7 +39,7 @@
         {
             databaseService.Save(result);
             UpdateInfo(result);
-            logger.LogInformation("Popular content updated.");
+            logger.LogTrace("Popular content updated.");
         }
 
         private DbPopContent GetOrCreateDbEntry()

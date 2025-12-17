@@ -131,6 +131,7 @@ namespace UltraDataBurningROM.Server.Services
 
         public IStorageNode TakeNode()
         {
+            var waitIndicator = false;
             while (true)
             {
                 lock (_nodesLock)
@@ -144,12 +145,17 @@ namespace UltraDataBurningROM.Server.Services
                             // Move to the back of the list.
                             nodes.Remove(n);
                             nodes.Add(n);
-                            logger.LogInformation("Node in use");
+                            logger.LogInformation("Node now in use");
                             return n;
                         }
                     }
                 }
                 Thread.Sleep(TimeSpan.FromSeconds(1));
+                if (!waitIndicator)
+                {
+                    waitIndicator = true;
+                    logger.LogInformation("Waiting for a node to become available...");
+                }
             }
         }
 

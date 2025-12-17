@@ -1,6 +1,4 @@
-﻿using UltraDataBurningROM.Server.Controllers;
-
-namespace UltraDataBurningROM.Server.Services
+﻿namespace UltraDataBurningROM.Server.Services
 {
     public interface ISearchService
     {
@@ -60,7 +58,7 @@ namespace UltraDataBurningROM.Server.Services
             lock (_lock)
             {
                 index = newIndex;
-                logger.LogInformation("Search index updated.");
+                logger.LogTrace("Search index updated.");
             }
         }
     }

@@ -17,7 +17,7 @@ namespace ArchivistClient
 
             node = new ArchivistNode(httpClient);
             node.BaseUrl = $"{url}/api/archivist/v1/";
-            Log("BaseURL: " + node.BaseUrl);
+            Log("Node baseURL: " + node.BaseUrl);
         }
 
         public bool Ping()
@@ -48,7 +48,7 @@ namespace ArchivistClient
         {
             lock (_lock)
             {
-                Log("Uploading file...");
+                Log($"Uploading file '{filepath}'...");
                 var contentType = "application/octet-stream";
                 var disposition = $"attachment; filename=\"UltraDataBurningRom_archive.zip\"";
 
@@ -56,7 +56,7 @@ namespace ArchivistClient
                 node.SetNextUploadInput(contentType, disposition);
                 var uploadTask = node.UploadAsync(contentType, disposition, fileStream);
                 uploadTask.Wait();
-                Log("Upload successful: " + uploadTask.Result);
+                Log($"Upload successful: '{uploadTask.Result}'");
                 return uploadTask.Result;
             }
         }
@@ -65,7 +65,7 @@ namespace ArchivistClient
         {
             lock (_lock)
             {
-                Log("Downloading file...");
+                Log($"Downloading file '{cid}' to '{filepath}' ...");
                 var task = node.DownloadNetworkStreamAsync(cid);
                 if (task.Result.StatusCode != 200)
                 {
@@ -77,6 +77,7 @@ namespace ArchivistClient
                 if (File.Exists(filepath)) File.Delete(filepath);
                 using var fileStream = File.OpenWrite(filepath);
                 stream.CopyTo(fileStream);
+                Log($"Succesfully downloaded file '{cid}' to '{filepath}'");
             }
         }
 
@@ -93,7 +94,7 @@ namespace ArchivistClient
         {
             lock (_lock)
             {
-                Log("Purchasing storage...");
+                Log($"Purchasing storage for '{cid}'...");
                 var purchaseTask = node.CreateStorageRequestAsync(cid, new StorageRequestCreation
                 {
                     Nodes = nodes,
@@ -106,21 +107,21 @@ namespace ArchivistClient
                 });
 
                 purchaseTask.Wait();
-                Log("Purchase created: " + purchaseTask.Result);
+                Log($"Purchase created for '{cid}' id: '{purchaseTask.Result}'");
                 return purchaseTask.Result;
             }
         }
 
         public bool WaitForPurchaseStarted(string purchaseId, TimeSpan expiry)
         {
-            Log("Waiting for purchase to start...");
+            Log($"Waiting for purchase '{purchaseId}' to start...");
             var timeout = DateTime.UtcNow + expiry + TimeSpan.FromSeconds(10);
             while (DateTime.UtcNow < timeout)
             {
                 var state = GetPurchaseState(purchaseId);
                 if (state == PurchaseState.Started)
                 {
-                    Log("Purchase started.");
+                    Log($"Purchase '{purchaseId}' started.");
                     return true;
                 }
                 if (state == PurchaseState.Errored) return false;
