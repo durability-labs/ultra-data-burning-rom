@@ -7,11 +7,12 @@ namespace ArchivistClient
         private readonly ArchivistNode node;
         private readonly Lock _lock = new Lock();
         private readonly Action<string> onLog;
+        private readonly string url;
 
         public ArchivistInstance(Action<string> onLog, string url)
         {
             this.onLog = onLog;
-
+            this.url = url;
             var httpClient = new HttpClient();
             httpClient.Timeout = TimeSpan.FromMinutes(5.0);
 
@@ -156,7 +157,7 @@ namespace ArchivistClient
 
         private void Log(string msg)
         {
-            onLog(msg);
+            onLog($"({url}): {msg}");
         }
     }
 
