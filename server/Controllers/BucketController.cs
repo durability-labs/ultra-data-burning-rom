@@ -64,7 +64,7 @@ namespace UltraDataBurningROM.Server.Controllers
                 return BadRequest("Bucket rejected the file-write");
             }
 
-            bucketService.Refresh(username);
+            bucketService.UploadFinished(username);
             return Ok();
         }
 

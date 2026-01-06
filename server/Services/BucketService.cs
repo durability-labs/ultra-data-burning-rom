@@ -6,7 +6,7 @@
         void DeleteFile(string username, string filename);
         bool IsBucketOpen(string username);
         string GetWriteableBucketFilePath(string username, string filename);
-        void Refresh(string username);
+        void UploadFinished(string username);
         void StartBurn(string username, BurnInfo burnInfo);
         void ClearNewRomCid(string username);
     }
@@ -77,11 +77,18 @@
             return path;
         }
 
-        public void Refresh(string username)
+        public void UploadFinished(string username)
         {
             if (!userService.IsValid(username)) return;
             var user = userService.GetUser(username);
             mountService.ClearCache(user.BucketMountId);
+
+            // If we just went from 0 entries to 1 entry,
+            // we set a new expiry for the bucketMount.
+            if (mountService.GetFileEntries(user.BucketMountId).Length == 1)
+            {
+                mountService.RefreshBucketMountExpiry(user.BucketMountId);
+            }
         }
 
         public void StartBurn(string username, BurnInfo burnInfo)

@@ -11,18 +11,20 @@
         private readonly IWorkerService workerService;
         private readonly IDatabaseService dbService;
         private readonly IDownloadService downloadService;
+        private readonly IMountService mountService;
 
-        public CleanupService(ILogger<CleanupService> logger, IWorkerService workerService, IDatabaseService dbService, IDownloadService downloadService)
+        public CleanupService(ILogger<CleanupService> logger, IWorkerService workerService, IDatabaseService dbService, IDownloadService downloadService, IMountService mountService)
         {
             this.logger = logger;
             this.workerService = workerService;
             this.dbService = dbService;
             this.downloadService = downloadService;
+            this.mountService = mountService;
         }
 
         public void Start()
         {
-            workerService.Attach(() => new CleanupContext(logger, dbService, downloadService));
+            workerService.Attach(() => new CleanupContext(logger, dbService, downloadService, mountService));
         }
     }
 
@@ -31,13 +33,15 @@
         private readonly ILogger logger;
         private readonly IDatabaseService dbService;
         private readonly IDownloadService downloadService;
+        private readonly IMountService mountService;
         private readonly List<DbMount> toCleanup = new List<DbMount>();
 
-        public CleanupContext(ILogger logger, IDatabaseService dbService, IDownloadService downloadService)
+        public CleanupContext(ILogger logger, IDatabaseService dbService, IDownloadService downloadService, IMountService mountService)
         {
             this.logger = logger;
             this.dbService = dbService;
             this.downloadService = downloadService;
+            this.mountService = mountService;
         }
 
         public void Initialize()
@@ -49,6 +53,7 @@
             CloseOldOpenMount(mount);
             MarkForCleanupOldClosedMount(mount);
             CloseStuckDownloadingMount(mount);
+            CleanUpBucketMount(mount);
         }
 
         public void Finish()
@@ -100,6 +105,17 @@
                 mount.State = MountState.ClosedNotUsed;
                 dbService.Save(mount);
                 logger.LogInformation("Closed stuck downloading mount");
+            }
+        }
+
+        private void CleanUpBucketMount(DbMount mount)
+        {
+            if (
+                mount.State == MountState.Bucket &&
+                mount.ExpiryUtc + TimeSpan.FromMinutes(30) < DateTime.UtcNow
+            )
+            {
+                mountService.DeleteAllEntries(mount.Id);
             }
         }
     }

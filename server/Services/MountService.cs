@@ -12,6 +12,8 @@
         void EndMount(string romCid);
         string GetFilePath(string romCid, string filename);
         string GetZipFilePath(string romCid);
+        void RefreshBucketMountExpiry(string mountId);
+        void DeleteAllEntries(string mountId);
     }
 
     public class MountService : IMountService
@@ -172,6 +174,31 @@
             if (mount.State != MountState.OpenInUse) return string.Empty;
 
             return mount.GetZipFilePath();
+        }
+
+        public void RefreshBucketMountExpiry(string mountId)
+        {
+            var mount = Get(mountId);
+            if (mount.State != MountState.Bucket) return;
+            mount.ExpiryUtc = DateTime.UtcNow + TimeSpan.FromHours(3.0);
+            dbService.Save(mount);
+        }
+
+        public void DeleteAllEntries(string mountId)
+        {
+            var mount = Get(mountId);
+            if (mount.State != MountState.Bucket) return;
+
+            var files = Directory.GetFiles(mount.Path);
+            foreach (var file in files)
+            {
+                try
+                {
+                    File.Delete(file);
+                }
+                catch { }
+            }
+            ClearCache(mountId);
         }
 
         private DbMount CreateNewMount(MountState state)
