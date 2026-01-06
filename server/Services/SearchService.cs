@@ -9,10 +9,10 @@
     public class SearchService : ISearchService
     {
         private readonly Lock _lock = new Lock();
-        private Dictionary<string, List<string>> index = new Dictionary<string, List<string>>();
         private readonly ILogger<SearchService> logger;
         private readonly IMapperService mapperService;
         private readonly IWorkerService workerService;
+        private SearchIndex index = new SearchIndex();
 
         public SearchService(ILogger<SearchService> logger, IMapperService mapperService, IWorkerService workerService)
         {
@@ -41,9 +41,8 @@
             var matches = Array.Empty<string>();
             lock (_lock)
             {
-                matches = index
-                    .Where(i => tokens.Contains(i.Key))
-                    .SelectMany(i => i.Value)
+                matches = tokens
+                    .SelectMany(index.GetMatches)
                     .Take(30)
                     .ToArray();
             }
@@ -53,13 +52,40 @@
             };
         }
 
-        private void OnResult(Dictionary<string, List<string>> newIndex)
+        private void OnResult(SearchIndex newIndex)
         {
             lock (_lock)
             {
                 index = newIndex;
                 logger.LogTrace("Search index updated.");
             }
+        }
+    }
+
+    public class SearchIndex
+    {
+        private readonly Dictionary<string, List<string>> index = new Dictionary<string, List<string>>();
+
+        public void AddRomForToken(string token, string romCid)
+        {
+            if (index.TryGetValue(token, out List<string>? value))
+            {
+                if (value != null)
+                {
+                    value.Add(romCid);
+                    return;
+                }
+            }
+            index[token] = new List<string> { romCid };
+        }
+
+        public string[] GetMatches(string token)
+        {
+            if (index.TryGetValue(token, out var matches))
+            {
+                return matches.ToArray();
+            }
+            return Array.Empty<string>();
         }
     }
 
@@ -70,10 +96,10 @@
 
     public class SearchIndexer : IWorkHandler<DbRom>
     {
-        private readonly Action<Dictionary<string, List<string>>> onResult;
-        private readonly Dictionary<string, List<string>> newIndex = new Dictionary<string, List<string>>();
+        private readonly Action<SearchIndex> onResult;
+        private readonly SearchIndex newIndex = new SearchIndex();
 
-        public SearchIndexer(Action<Dictionary<string, List<string>>> onResult)
+        public SearchIndexer(Action<SearchIndex> onResult)
         {
             this.onResult = onResult;
         }
@@ -87,21 +113,8 @@
             var tokens = GatherTokens(entity.Info);
             foreach (var token in tokens)
             {
-                Add(token, entity.RomCid);
+                newIndex.AddRomForToken(token, entity.RomCid);
             }
-        }
-
-        private void Add(string token, string romCid)
-        {
-            if (newIndex.TryGetValue(token, out List<string>? value))
-            {
-                if (value != null)
-                {
-                    value.Add(romCid);
-                    return;
-                }
-            }
-            newIndex[token] = new List<string> { romCid };
         }
 
         private string[] GatherTokens(RomInfo info)
