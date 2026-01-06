@@ -17,6 +17,7 @@ namespace UltraDataBurningROM.Server.Services
         private readonly IStorageService storageService;
         private readonly IMountService mountService;
         private static readonly Lock _startBurnLock = new Lock();
+        private readonly List<string> extending = new List<string>();
 
         public BurnService(ILogger<BurnService> logger, IDatabaseService dbService, IStorageService storageService, IMountService mountService)
         {
@@ -56,11 +57,15 @@ namespace UltraDataBurningROM.Server.Services
             if (rom.StorageExpireUtc > (DateTime.UtcNow + TimeSpan.FromHours(48.0))) return;
             if (rom.StorageExpireUtc < DateTime.UtcNow) return;
 
-            logger.LogInformation("Extending ROM...");
             Task.Run(() =>
             {
                 lock (_startBurnLock)
                 {
+                    if (extending.Contains(romcid)) return;
+                    extending.Add(romcid);
+
+                    logger.LogInformation("Extending ROM...");
+
                     var node = storageService.TakeNode();
                     try
                     {
@@ -71,6 +76,7 @@ namespace UltraDataBurningROM.Server.Services
                     finally
                     {
                         storageService.ReleaseNode(node);
+                        extending.Remove(romcid);
                     }
                 }
             });
